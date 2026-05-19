@@ -55,6 +55,8 @@ export default function Home() {
               <View key={index} className='relative w-full h-48 overflow-hidden bg-gray-200' style={{ width: ScreenWidth - 32 }}>
                 <Image source={{ uri: banner.image }} className='w-full h-full' resizeMode="cover" />
 
+                <View className='absolute inset-0 bg-black/40' />
+
                 <View className='absolute z-10 bottom-4 left-4'>
                   <Text className='text-2xl font-bold text-white'>
                     {banner.title}
@@ -68,7 +70,6 @@ export default function Home() {
                     <Text className='text-xs font-bold text-primary'>Get Now</Text>
                   </TouchableOpacity>
                 </View>
-                <View className='absolute w-full h-full bg-black opacity-20' />
 
               </View>
             ))}
