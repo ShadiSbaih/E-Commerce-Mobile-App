@@ -27,7 +27,8 @@ export default function ProductDetails() {
     const fetchProduct = async () => {
         try {
             setLoading(true);
-            setProduct(dummyProducts.find(p => p._id === id) as Product || null);
+            const found = dummyProducts.find(p => p._id === id);
+            setProduct(found ?? null);
         } catch (error) {
             console.error("Error fetching product:", error);
         }
