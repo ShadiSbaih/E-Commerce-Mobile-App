@@ -5,7 +5,7 @@ import React, { createContext, useEffect, useState } from "react";
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
-export function wishlistProvider({ children }: { children: React.ReactNode }) {
+export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
     const [Wishlist, setWishlist] = useState<Product[]>([]);
     const [loading, setLoading] = useState(false);
