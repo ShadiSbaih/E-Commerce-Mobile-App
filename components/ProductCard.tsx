@@ -11,7 +11,7 @@ export default function ProductCard({ product }: { product: any }) {
         <Link href={`/product/${product._id}`} asChild>
             <TouchableOpacity className='w-[48%] mb-4 bg-white rounded-lg overflow-hidden '>
                 <View className='relative w-full h-56 bg-gray-100'>
-                    <Image source={{ uri: product.images[0] }}
+                    <Image source={{ uri: product.images[0] ??"" }}
                         className='w-full h-full' resizeMode="cover" />
 
                     {/* Favorite icon   */}
