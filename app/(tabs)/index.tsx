@@ -126,7 +126,7 @@ export default function Home() {
         </View>
 
         {/* Newsletter  CTA. */}
-        <View className="items-center p-6 mb-20 bg-gray-100 rounded-2xl">
+        <View className="items-center p-6 bg-gray-100 mb-28 pb-22 rounded-2xl">
           <Text className='mb-2 text-2xl font-bold text-center text-primary'>Join Our Newsletter</Text>
           <Text className='mb-4 text-sm text-center text-secondary'>
             Subscribe to our newsletter for the latest updates and exclusive offers!
