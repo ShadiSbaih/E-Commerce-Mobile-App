@@ -16,7 +16,13 @@ export default function ProductCard({ product }: { product: any }) {
                         className='w-full h-full' resizeMode="cover" />
 
                     {/* Favorite icon   */}
-                    <TouchableOpacity className='absolute z-10 p-2 bg-white rounded-full shadow-sm top-2 right-2' onPress={(e) => {e.stopPropagation() toggleWishlist(product)}}>
+                    <TouchableOpacity
+                        className='absolute z-10 p-2 bg-white rounded-full shadow-sm top-2 right-2'
+                        onPress={(e) => {
+                            e.stopPropagation();
+                            toggleWishlist(product);
+                        }}
+                    >
                         <Ionicons name={`${isLiked ? 'heart' : 'heart-outline'}`} size={24} color={`${isLiked ? COLORS.accent : COLORS.primary}`} />
                     </TouchableOpacity>
 

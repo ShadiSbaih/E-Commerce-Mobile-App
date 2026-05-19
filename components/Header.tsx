@@ -13,6 +13,7 @@ export default function Header({ title, showBack, showCart, showSearch, showMenu
         <View className='flex-row items-center justify-between px-4 py-3 bg-white'>
             {/* Header left side */}
             <View className='flex-row items-center flex-1 '>
+                
                 {showBack && (
                     <TouchableOpacity className='mr-3' onPress={() => router.back()}>
                         <Ionicons name="arrow-back-outline" size={24} color={COLORS.primary} />
@@ -32,7 +33,9 @@ export default function Header({ title, showBack, showCart, showSearch, showMenu
                 ) : title && (
                     <Text className='flex-1 mr-8 text-xl font-bold text-center text-primary'>{title}</Text>
                 )}
+                
                 {(!title && !showSearch) && <View className='flex-1' />}
+                
             </View>
 
             {/* Header right side */}
@@ -42,6 +45,7 @@ export default function Header({ title, showBack, showCart, showSearch, showMenu
                         <Ionicons name="search-outline" size={28} color={COLORS.primary} />
                     </TouchableOpacity>
                 )}
+                
                 {
                     showCart && (
                         <TouchableOpacity onPress={() => router.push('/(tabs)/cart')}>
@@ -56,7 +60,6 @@ export default function Header({ title, showBack, showCart, showSearch, showMenu
                 }
 
             </View>
-
         </View>
     )
 }
