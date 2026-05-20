@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '@/constants'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useCart } from '@/Context/CartContext'
-import { View } from 'react-native'
+import { Text, View } from 'react-native'
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets()
@@ -58,6 +58,7 @@ export default function TabLayout() {
                             />
                             {cartItems.length > 0 && (
                                 <View className='absolute items-center justify-center rounded-full -top-2 -right-2 bg-accent size-3'>
+                                    <Text className='text-[8px] font-bold text-white'>{cartItems.length}</Text>
                                     <Ionicons name="ellipse" size={6} color="white" className='absolute -top-2 -right-2' />
                                 </View>
                             )}
