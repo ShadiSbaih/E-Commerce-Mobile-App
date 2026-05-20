@@ -1,6 +1,6 @@
-import { dummyCart, dummyWishlist } from "@/assets/assets";
+import { dummyCart } from "@/assets/assets";
 import { Product } from "@/constants/types";
-import React, { createContext, use, useEffect, useState } from "react";
+import React, { createContext,  useEffect, useState } from "react";
 
 export type CartItem = {
     id: string;
@@ -15,7 +15,7 @@ type CartContextType = {
     cartItems: CartItem[];
     addToCart: (product: Product, size: string) => Promise<void>;
     removeFromCart: (itemId: string, size: string) => Promise<void>;
-    updateCartItem: (itemId: string, quantity: number, size: string) => Promise<void>;
+    updateQuantity: (itemId: string, quantity: number, size: string) => Promise<void>;
     clearCart: () => Promise<void>;
     cartTotal: number;
     itemCount: number;
@@ -33,7 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         try {
             const serverCart = dummyCart;
 
-            const mappedItems: CartItems[] = serverCart.items.map((item: any) => ({
+            const mappedItems: CartItem[] = serverCart.items.map((item: any) => ({
                 id: item.product._id,
                 productId: item.product._id,
                 quantity: item.quantity,
