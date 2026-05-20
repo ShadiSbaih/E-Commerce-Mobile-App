@@ -7,7 +7,7 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
-    const [Wishlist, setWishlist] = useState<Product[]>([]);
+    const [wishlist, setWishlist] = useState<Product[]>([]);
     const [loading, setLoading] = useState(false);
 
     const fetchWishlist = async () => {
@@ -22,16 +22,16 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     };
 
     const toggleWishlist = (product: Product) => {
-        const exists = Wishlist.some(item => item._id === product._id);
+        const exists = wishlist.some(item => item._id === product._id);
         if (exists) {
-            setWishlist(Wishlist.filter(item => item._id !== product._id));
+            setWishlist(wishlist.filter(item => item._id !== product._id));
         } else {
-            setWishlist([...Wishlist, product]);
+            setWishlist([...wishlist, product]);
         }
     }
     
     const isInWishlist = (productId: string) => {
-        return Wishlist.some(item => item._id === productId);
+        return wishlist.some(item => item._id === productId);
     };
 
     useEffect(() => {
@@ -39,7 +39,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     return (
-        <WishlistContext.Provider value={{ Wishlist, setWishlist, loading, setLoading ,toggleWishlist, isInWishlist}}>
+        <WishlistContext.Provider value={{ wishlist, loading, toggleWishlist, isInWishlist }}>
             {children}
         </WishlistContext.Provider >
     )
