@@ -3,9 +3,13 @@ import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '@/constants'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useCart } from '@/Context/CartContext'
+import { Text, View } from 'react-native'
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets()
+
+    const { cartItems } = useCart();
 
     return (
         <Tabs
@@ -46,11 +50,18 @@ export default function TabLayout() {
                 name="cart"
                 options={{
                     tabBarIcon: ({ color, focused }) => (
-                        <Ionicons
-                            name={focused ? "cart" : "cart-outline"}
-                            size={24}
-                            color={color}
-                        />
+                        < View className='relative'>
+                            <Ionicons
+                                name={focused ? "cart" : "cart-outline"}
+                                size={24}
+                                color={color}
+                            />
+                            {cartItems.length > 0 && (
+                                <View className='absolute items-center justify-center rounded-full -top-2 -right-2 bg-accent size-4'>
+                                    <Text className='text-[8px] font-bold text-white'>{cartItems.length}</Text>
+                                </View>
+                            )}
+                        </ View>
                     ),
                 }}
             />

@@ -18,7 +18,7 @@ export default function AdminLayout() {
 
     if (!isLoaded) {
         return (
-            <View className="flex-1 justify-center items-center bg-surface">
+            <View className="items-center justify-center flex-1 bg-surface">
                 <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
         );
@@ -42,10 +42,10 @@ export default function AdminLayout() {
                 headerRight: () => (
                     <TouchableOpacity
                         onPress={() => router.replace("/(tabs)")}
-                        className="mr-4 flex-row items-center"
+                        className="flex-row items-center mr-4"
                     >
                         <Ionicons name="log-out-outline" size={24} color={COLORS.primary} />
-                        <Text className="ml-1 text-primary font-medium">Exit</Text>
+                        <Text className="ml-1 font-medium text-primary">Exit</Text>
                     </TouchableOpacity>
                 ),
             }}
