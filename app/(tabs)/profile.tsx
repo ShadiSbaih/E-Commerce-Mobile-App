@@ -1,19 +1,36 @@
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import React from 'react';
-import { dummyUser } from '@/assets/assets';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
 import { EvilIcons, Ionicons } from '@expo/vector-icons';
 import { COLORS, PROFILE_MENU } from '@/constants';
+import { useClerk, useUser } from '@clerk/expo';
 
 export default function Profile() {
-  const { user } = { user: dummyUser };
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const router = useRouter();
 
   const handleLogout = async () => {
-     router.replace('/sign-in');
+    await signOut();
+    router.replace('/sign-in');
   }
+
+  if (!isLoaded) {
+    return (
+      <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
+        <Header title="Profile" />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const displayName = user?.fullName || 'User';
+  const emailAddress =
+    user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || '';
 
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
@@ -45,11 +62,11 @@ export default function Profile() {
               </View>
 
               <Text className="text-xl font-bold text-primary">
-                {`${user.firstName} ${user.lastName}`}
+                {displayName}
               </Text>
 
               <Text className="mt-1 text-sm text-secondary">
-                {user.emailAddresses?.[0]?.emailAddress ?? user.email}
+                {emailAddress}
               </Text>
 
               {/* admin panel button if user is admin */}
