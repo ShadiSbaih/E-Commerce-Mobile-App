@@ -57,9 +57,8 @@ export default function TabLayout() {
                                 color={color}
                             />
                             {cartItems.length > 0 && (
-                                <View className='absolute items-center justify-center rounded-full -top-2 -right-2 bg-accent size-3'>
+                                <View className='absolute items-center justify-center rounded-full -top-2 -right-2 bg-accent size-4'>
                                     <Text className='text-[8px] font-bold text-white'>{cartItems.length}</Text>
-                                    <Ionicons name="ellipse" size={6} color="white" className='absolute -top-2 -right-2' />
                                 </View>
                             )}
                         </ View>
