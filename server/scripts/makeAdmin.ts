@@ -16,7 +16,7 @@ const makeAdmin = async () => {
       });
       console.log(`User with email ${email} has been made an admin.`);
     }
-    
+    console.log(`Admin user already exists or has been created successfully.`);    
   } catch (err: any) {
     console.error("Error making user an admin:", err?.message || err);
   }
