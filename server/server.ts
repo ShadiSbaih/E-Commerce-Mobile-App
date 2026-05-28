@@ -33,7 +33,7 @@ app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
-app.use("api/products", ProductRouter);
+app.use("/api/products", ProductRouter);
 app.use("/api/cart", CartRouter);
 /*  Error handling middleware. This should be defined after all other app.use() and routes calls.
     It catches any errors that occur in the route handlers and sends a 500 Internal Server Error response. */
