@@ -8,7 +8,10 @@ import makeAdmin from "./scripts/makeAdmin.js";
 import ProductRouter from "./routes/productRoutes.js";
 import CartRouter from "./routes/cartRoutes.js";
 import OrderRouter from "./routes/ordersRoutes.js";
+import AddressRouter from "./routes/adressRoutes.js";
 
+// Create an Express application instance.
+// This is the main app object that will be used to define routes and middleware.
 const app = express();
 
 //connect to database
@@ -20,23 +23,29 @@ app.post("/api/clerk", express.raw({ type: "application/json" }), clerkWebhook);
 // Middleware
 app.use(cors());
 app.use(express.json());
+
 // Clerk middleware
 app.use(clerkMiddleware());
 
+// Set the port from environment variable or default to 3000
 const port = process.env.PORT || 3000;
 
+// Basic route to check if server is running
 app.get("/", (req: Request, res: Response) => {
   res.send("Server is Live!");
 });
 
-/* Health check endpoint. This is a simple route that can be used to verify that the server is running and responsive. It returns a JSON object with a status of "ok". */
+// Health check endpoint. This is a simple route that can be used to verify that the server is running and responsive. It returns a JSON object with a status of "ok". */
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
+// Main API routes
 app.use("/api/products", ProductRouter);
 app.use("/api/cart", CartRouter);
 app.use("/api/orders", OrderRouter);
+app.use("/api/addresses", AddressRouter);
+
 /*  Error handling middleware. This should be defined after all other app.use() and routes calls.
     It catches any errors that occur in the route handlers and sends a 500 Internal Server Error response. */
 app.use((err: Error, req: Request, res: Response) => {
@@ -46,8 +55,12 @@ app.use((err: Error, req: Request, res: Response) => {
     .json({ message: "Error Middleware!", error: "Internal Server Error" });
 });
 
+// Create an admin user if not exists when the server starts.
+//  This is useful for testing and initial setup. The makeAdmin function should check if an admin user already exists and create one if it doesn't.
 await makeAdmin();
 
+// Start the server and listen on the specified port.
+// The callback function logs a message to the console indicating that the server is running and provides the URL where it can be accessed.
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
