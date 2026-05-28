@@ -7,6 +7,7 @@ import { clerkWebhook } from "./controllers/webhook.js";
 import makeAdmin from "./scripts/makeAdmin.js";
 import ProductRouter from "./routes/productRoutes.js";
 import CartRouter from "./routes/cartRoutes.js";
+import OrderRouter from "./routes/ordersRoutes.js";
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.get("/api/health", (req: Request, res: Response) => {
 
 app.use("/api/products", ProductRouter);
 app.use("/api/cart", CartRouter);
+app.use("/api/orders", OrderRouter);
 /*  Error handling middleware. This should be defined after all other app.use() and routes calls.
     It catches any errors that occur in the route handlers and sends a 500 Internal Server Error response. */
 app.use((err: Error, req: Request, res: Response) => {
