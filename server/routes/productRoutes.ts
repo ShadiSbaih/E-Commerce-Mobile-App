@@ -7,8 +7,10 @@ import {
 } from "../controllers/ProductController.js";
 import { authorize, protect } from "../middleware/auth.js";
 import upload from "../middleware/upload.js";
+import  express  from 'express';
 
-const ProductRouter = require("express").Router();
+
+const ProductRouter = express.Router();
 
 //get all products
 ProductRouter.get("/", getProducts);

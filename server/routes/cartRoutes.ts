@@ -6,8 +6,9 @@ import {
   updateCartItem,
 } from "../controllers/CartController.js";
 import { protect } from "../middleware/auth.js";
+import express from "express";
 
-const CartRouter = require("express").Router();
+const CartRouter = express.Router();
 
 //get user cart
 CartRouter.get("/", protect, getCart);
