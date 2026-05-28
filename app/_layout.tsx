@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { CartProvider } from "@/Context/CartContext";
 import "../global.css";
-import { type Href, Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { WishlistProvider } from "@/Context/WishlistContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
@@ -10,79 +10,67 @@ import { tokenCache } from "@clerk/expo/token-cache";
 
 /**
  * Clerk publishable key used to initialize authentication.
- * Loaded from environment variables.
+ * Required for Clerk to function.
  */
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
 /**
- * Ensures that Clerk authentication is properly configured.
- * Throws an error if the publishable key is missing.
+ * Ensures authentication configuration exists before app starts.
  */
 if (!publishableKey) {
-  throw new Error("Add your Clerk Publishable Key to the .env file");
+  throw new Error("Missing Clerk Publishable Key");
 }
 
 /**
- * RootNavigator
+ * AuthGate
  *
  * Responsible for:
- * - Protecting routes (authentication guard)
- * - Redirecting users based on authentication state
- * - Handling navigation flow between auth and app screens
+ * - Protecting routes based on authentication state
+ * - Redirecting users between auth screens and protected app screens
  */
-function RootNavigator() {
+function AuthGate() {
   const { isLoaded, isSignedIn } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
   /**
-   * Authentication guard logic:
+   * Current route segment (first level of navigation path)
+   */
+  const segment = segments[0];
+
+  /**
+   * Determines whether user is currently in authentication flow
+   */
+  const isAuthRoute =
+    segment === "(auth)" ||
+    segment === "sign-in" ||
+    segment === "sign-up";
+
+  /**
+   * Authentication routing logic:
    * - Redirect unauthenticated users to sign-in
-   * - Prevent authenticated users from accessing auth screens
+   * - Prevent signed-in users from accessing auth screens
    */
   useEffect(() => {
-    if (!isLoaded) {
+    if (!isLoaded) return;
+
+    if (!isSignedIn && !isAuthRoute) {
+      router.replace("/sign-in");
       return;
     }
 
-    const rootSegment = segments[0] as string | undefined;
-
-    /**
-     * Determines whether the current route belongs to authentication flow
-     */
-    const inAuthRoute =
-      rootSegment === "(auth)" ||
-      rootSegment === "sign-in" ||
-      rootSegment === "sign-up";
-
-    /**
-     * If user is not signed in and tries to access protected routes,
-     * redirect them to sign-in screen.
-     */
-    if (!isSignedIn && !inAuthRoute) {
-      router.replace("/sign-in" as Href);
-      return;
+    if (isSignedIn && isAuthRoute) {
+      router.replace("/");
     }
-
-    /**
-     * If user is signed in and tries to access auth screens,
-     * redirect them to the home screen.
-     */
-    if (isSignedIn && inAuthRoute) {
-      router.replace("/" as Href);
-    }
-  }, [isLoaded, isSignedIn, segments, router]);
+  }, [isLoaded, isSignedIn, isAuthRoute]);
 
   /**
-   * Prevent rendering navigation until authentication state is resolved.
+   * Prevent rendering navigation until auth state is resolved
    */
-  if (!isLoaded) {
-    return null;
-  }
+  if (!isLoaded) return null;
 
   /**
-   * Root stack navigator configuration.
-   * Hides default headers globally.
+   * Root stack navigator (global navigation config)
    */
   return <Stack screenOptions={{ headerShown: false }} />;
 }
@@ -90,37 +78,29 @@ function RootNavigator() {
 /**
  * RootLayout
  *
- * Application root wrapper responsible for:
- * - Gesture handling initialization
- * - Authentication provider setup (Clerk)
+ * Global application wrapper that sets up:
+ * - Gesture handling system
+ * - Authentication provider (Clerk)
  * - Global state providers (Cart, Wishlist)
  * - Navigation system
- * - Toast notifications system
+ * - Toast notification system
  */
 export default function RootLayout() {
   return (
+    /**
+     * Required root wrapper for gesture handling support
+     */
     <GestureHandlerRootView style={{ flex: 1 }}>
-      {/**
-       * Clerk authentication provider
-       * Enables login/session management across the app
-       */}
+      {/* Authentication provider (Clerk) */}
       <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-        {/**
-         * Global cart state provider
-         */}
+        {/* Global cart state */}
         <CartProvider>
-          {/**
-           * Global wishlist state provider
-           */}
+          {/* Global wishlist state */}
           <WishlistProvider>
-            {/**
-             * Handles authentication-based routing logic
-             */}
-            <RootNavigator />
+            {/* Authentication-based routing guard */}
+            <AuthGate />
 
-            {/**
-             * Global toast notification system
-             */}
+            {/* Global toast notifications */}
             <Toast />
           </WishlistProvider>
         </CartProvider>
