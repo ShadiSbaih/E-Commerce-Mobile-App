@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@clerk/express": "^2.1.22",
     "@types/mongoose": "^5.11.96",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
