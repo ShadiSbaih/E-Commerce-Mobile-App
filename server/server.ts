@@ -9,6 +9,7 @@ import ProductRouter from "./routes/productRoutes.js";
 import CartRouter from "./routes/cartRoutes.js";
 import OrderRouter from "./routes/ordersRoutes.js";
 import AddressRouter from "./routes/adressRoutes.js";
+import AdminRouter from "./routes/adminRoutes.js";
 
 // Create an Express application instance.
 // This is the main app object that will be used to define routes and middleware.
@@ -45,6 +46,7 @@ app.use("/api/products", ProductRouter);
 app.use("/api/cart", CartRouter);
 app.use("/api/orders", OrderRouter);
 app.use("/api/addresses", AddressRouter);
+app.use("api/admin", AdminRouter);
 
 /*  Error handling middleware. This should be defined after all other app.use() and routes calls.
     It catches any errors that occur in the route handlers and sends a 500 Internal Server Error response. */
