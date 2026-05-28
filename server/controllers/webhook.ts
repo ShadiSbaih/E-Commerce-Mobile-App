@@ -10,25 +10,21 @@ export const clerkWebhook = async (req: Request, res: Response) => {
 
       const userData = {
         clerkId: event.data.id,
-        name: event.data?.first_name + " " + event.data?.last_name,
-        email: event.data?.email_addresses?.[0]?.email_address,
+        name: `${event.data?.first_name || ""} ${event.data?.last_name || ""}`.trim() || "Unknown",
+        email: event.data?.email_addresses?.[0]?.email_address ?? "",
         image: event.data?.image_url,
       };
 
       if (user) {
-        await User.findByIdAndUpdate({clerkId: event.data.id}, userData);
+        await User.findOneAndUpdate({ clerkId: event.data.id }, userData);
       } else {
         await User.create(userData);
       }
     }
 
-    // Do something with payload
-    // For this guide, log payload to console
     const { id } = event.data;
     const eventType = event.type;
-    console.log(
-      `Received webhook with ID ${id} and event type of ${eventType}`,
-    );
+    console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
     console.log("Webhook payload:", event.data);
 
     return res.send("Webhook received");
@@ -37,3 +33,4 @@ export const clerkWebhook = async (req: Request, res: Response) => {
     return res.status(400).send("Error verifying webhook");
   }
 };
+
