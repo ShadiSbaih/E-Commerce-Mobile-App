@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
+import { setAuthHandlers } from "@/constants/api";
 
 /**
  * Clerk publishable key used to initialize authentication.
@@ -88,6 +89,23 @@ function RootNavigator() {
 }
 
 /**
+ * AuthInitializer
+ *
+ * Registers Clerk's getToken and signOut with the axios API instance
+ * so that all requests automatically include the Bearer token and
+ * 401 responses trigger a sign-out.
+ */
+function AuthInitializer({ children }: { children: React.ReactNode }) {
+  const { getToken, signOut } = useAuth();
+
+  useEffect(() => {
+    setAuthHandlers(getToken, signOut);
+  }, [getToken, signOut]);
+
+  return <>{children}</>;
+}
+
+/**
  * RootLayout
  *
  * Application root wrapper responsible for:
@@ -106,24 +124,29 @@ export default function RootLayout() {
        */}
       <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
         {/**
-         * Global cart state provider
+         * Registers auth handlers for axios interceptors
          */}
-        <CartProvider>
+        <AuthInitializer>
           {/**
-           * Global wishlist state provider
+           * Global cart state provider
            */}
-          <WishlistProvider>
+          <CartProvider>
             {/**
-             * Handles authentication-based routing logic
+             * Global wishlist state provider
              */}
-            <RootNavigator />
+            <WishlistProvider>
+              {/**
+               * Handles authentication-based routing logic
+               */}
+              <RootNavigator />
 
-            {/**
-             * Global toast notification system
-             */}
-            <Toast />
-          </WishlistProvider>
-        </CartProvider>
+              {/**
+               * Global toast notification system
+               */}
+              <Toast />
+            </WishlistProvider>
+          </CartProvider>
+        </AuthInitializer>
       </ClerkProvider>
     </GestureHandlerRootView>
   );
