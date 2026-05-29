@@ -10,15 +10,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '@/Context/CartContext';
 import { useRouter } from 'expo-router';
 import { Address } from '@/constants/types';
-import { dummyAddress } from '@/assets/assets';
+// import { dummyAddress } from '@/assets/assets';
 import Toast from 'react-native-toast-message';
 import { COLORS } from '@/constants';
 import Header from '@/components/Header';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@clerk/expo';
+import api from '@/constants/api';
 
 export default function Checkout() {
-  const { cartTotal } = useCart();
+  const { cartTotal, clearCart } = useCart();
   const router = useRouter();
+  const { getToken } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -35,16 +38,33 @@ export default function Checkout() {
   const total = cartTotal + shipping + tax;
 
   const fetchAddresses = async () => {
-    const addrList = dummyAddress;
+    try {
 
-    if (addrList.length > 0) {
-      const def =
-        addrList.find((a) => a.isDefault) || addrList[0];
-
-      setSelectedAddress(def as Address);
+      const token = await getToken();
+      const { data } = await api.get('/addresses', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const addressList: Address[] = data.data;
+      if (addressList.length > 0) {
+        //find default address
+        const def = addressList.find((a: Address) => a.isDefault || addressList[0]);
+        setSelectedAddress(def ?? null);
+      }
+    }
+    catch (err) {
+      console.error("Error fetching addresses:", err);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to load addresses',
+        text2: 'Please try again later.',
+      });
+    }
+    finally {
+      setPageLoading(false);
     }
 
-    setPageLoading(false);
   };
 
   const handlePlaceOrder = async () => {
@@ -67,7 +87,42 @@ export default function Checkout() {
       });
     }
 
-    router.replace('/orders');
+    setLoading(true);
+    try {
+      const payload = {
+        shippingAddressId: selecetedAddress._id,
+        notes: "Placed via App",
+        paymentMethod: "cash",
+      }
+      const token = await getToken();
+      const { data } = await api.post('/orders', payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (data.success) {
+        await clearCart();
+        Toast.show({
+          type: 'success',
+          text1: 'Order placed',
+          text2: 'Your order has been placed successfully.',
+        });
+      }
+      //Cash on delivery 
+      router.replace('/orders');
+
+    } catch (error) {
+      console.error("Error placing order:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to place order',
+        text2: 'Please try again later.',
+      });
+    }
+    finally {
+      setLoading(false);
+    }
+
   };
 
   useEffect(() => {
@@ -113,7 +168,7 @@ export default function Checkout() {
                 </Text>
 
                 <TouchableOpacity
-                  onPress={() => router.push('/address')}
+                  onPress={() => router.push('/address' as any)}
                 >
                   <Text className="text-sm text-accent">
                     Change
@@ -132,7 +187,7 @@ export default function Checkout() {
             </View>
           ) : (
             <TouchableOpacity
-              onPress={() => router.push('/address')}
+              onPress={() => router.push('/address' as any)}
               className="items-center justify-center p-6 mb-6 bg-white border-2 border-gray-300 border-dashed rounded-xl"
             >
               <Text className="font-bold text-primary">
@@ -149,11 +204,10 @@ export default function Checkout() {
           {/* Cash on Delivery */}
           <TouchableOpacity
             onPress={() => setPaymentMethod('cash')}
-            className={`flex-row items-center bg-white justify-between p-4 mb-4 rounded-2xl border ${
-              paymentMethod === 'cash'
-                ? 'border-black'
-                : 'border-gray-200'
-            }`}
+            className={`flex-row items-center bg-white justify-between p-4 mb-4 rounded-2xl border ${paymentMethod === 'cash'
+              ? 'border-black'
+              : 'border-gray-200'
+              }`}
           >
             <View className="flex-row items-center flex-1">
               <View className="items-center justify-center w-10 h-10 mr-3 rounded-full bg-[#ECECEC]">
@@ -176,11 +230,10 @@ export default function Checkout() {
             </View>
 
             <View
-              className={`w-6 h-6 rounded-full items-center justify-center ${
-                paymentMethod === 'cash'
-                  ? 'bg-black'
-                  : 'border border-gray-300'
-              }`}
+              className={`w-6 h-6 rounded-full items-center justify-center ${paymentMethod === 'cash'
+                ? 'bg-black'
+                : 'border border-gray-300'
+                }`}
             >
               {paymentMethod === 'cash' && (
                 <Ionicons
@@ -195,11 +248,10 @@ export default function Checkout() {
           {/* Card Payment */}
           <TouchableOpacity
             onPress={() => setPaymentMethod('stripe')}
-            className={`flex-row items-center justify-between p-4 mb-6 rounded-2xl border bg-white ${
-              paymentMethod === 'stripe'
-                ? 'border-black'
-                : 'border-gray-200'
-            }`}
+            className={`flex-row items-center justify-between p-4 mb-6 rounded-2xl border bg-white ${paymentMethod === 'stripe'
+              ? 'border-black'
+              : 'border-gray-200'
+              }`}
           >
             <View className="flex-row items-center flex-1">
               <View className="items-center justify-center w-10 h-10 mr-3 rounded-full bg-[#ECECEC]">
@@ -222,11 +274,10 @@ export default function Checkout() {
             </View>
 
             <View
-              className={`w-6 h-6 rounded-full items-center justify-center ${
-                paymentMethod === 'stripe'
-                  ? 'bg-black'
-                  : 'border border-gray-300'
-              }`}
+              className={`w-6 h-6 rounded-full items-center justify-center ${paymentMethod === 'stripe'
+                ? 'bg-black'
+                : 'border border-gray-300'
+                }`}
             >
               {paymentMethod === 'stripe' && (
                 <Ionicons

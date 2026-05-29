@@ -7,6 +7,8 @@ import { useRouter } from 'expo-router';
 import { CATEGORIES } from '@/constants';
 import CategoryItem from '@/components/CategoryItem';
 import ProductCard from '@/components/ProductCard';
+import api from '@/constants/api';
+import Toast from 'react-native-toast-message';
 
 
 const { width: ScreenWidth } = Dimensions.get('window');
@@ -22,11 +24,17 @@ export default function Home() {
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
-      setProduct(dummyProducts)
-      setLoading(false);
+      const { data } = await api.get("/products");
+      setProduct(data.data);
     } catch (error) {
       console.error("Error fetching products:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to fetch products"
+      });
+    }
+    finally {
       setLoading(false);
     }
   }

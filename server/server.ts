@@ -8,8 +8,9 @@ import makeAdmin from "./scripts/makeAdmin.js";
 import ProductRouter from "./routes/productRoutes.js";
 import CartRouter from "./routes/cartRoutes.js";
 import OrderRouter from "./routes/ordersRoutes.js";
-import AddressRouter from "./routes/adressRoutes.js";
+import AddressRouter from "./routes/addressRoutes.js";
 import AdminRouter from "./routes/adminRoutes.js";
+import { seedProducts } from "./scripts/seedProducts.js";
 
 // Create an Express application instance.
 // This is the main app object that will be used to define routes and middleware.
@@ -46,7 +47,7 @@ app.use("/api/products", ProductRouter);
 app.use("/api/cart", CartRouter);
 app.use("/api/orders", OrderRouter);
 app.use("/api/addresses", AddressRouter);
-app.use("api/admin", AdminRouter);
+app.use("/api/admin", AdminRouter);
 
 /*  Error handling middleware. This should be defined after all other app.use() and routes calls.
     It catches any errors that occur in the route handlers and sends a 500 Internal Server Error response. */
@@ -60,6 +61,9 @@ app.use((err: Error, req: Request, res: Response) => {
 // Create an admin user if not exists when the server starts.
 //  This is useful for testing and initial setup. The makeAdmin function should check if an admin user already exists and create one if it doesn't.
 await makeAdmin();
+
+//Seed dummy products if no products are present in the database. 
+await seedProducts(process.env.MONGO_URI as string); // Call the seedProducts function to populate the database with dummy products if it's empty. This is useful for testing and development purposes.
 
 // Start the server and listen on the specified port.
 // The callback function logs a message to the console indicating that the server is running and provides the URL where it can be accessed.

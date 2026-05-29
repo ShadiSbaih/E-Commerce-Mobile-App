@@ -8,6 +8,7 @@ import Header from '@/components/Header';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants';
 import ProductCard from '@/components/ProductCard';
+import api from '@/constants/api';
 
 export default function Shop() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -17,45 +18,37 @@ export default function Shop() {
     const [hasMore, setHasMore] = useState(true);
 
     const fetchProducts = async (pageNumber = 1) => {
-    if (pageNumber === 1) {
-        setLoading(true);
-    } else {
-        setLoadingMore(true);
-    }
-
-    try {
-        const start = (pageNumber - 1) * 10;
-        const end = start + 10;
-        const paginatedData = dummyProducts.slice(start, end);
-
-        // ❌ WRONG: if (paginatedData.length === 1)
-        // ✅ CORRECT: Check the page number
         if (pageNumber === 1) {
-            setProducts(paginatedData); // Replace list on first load
+            setLoading(true);
         } else {
-            // Append new items, filtering out potential duplicates just to be extremely safe
-            setProducts(prev => {
-                const newItems = paginatedData.filter(
-                    newItem => !prev.some(existingItem => existingItem._id === newItem._id)
-                );
-                return [...prev, ...newItems];
-            });
+            setLoadingMore(true);
         }
-        
-        setHasMore(end < dummyProducts.length);
-        setPage(pageNumber);
-    } catch (error) {
-        console.error("Error fetching products:", error);
-        Toast.show({
-            type: 'error',
-            text1: 'Failed to load products',
-            text2: 'Please try again later.',
-        });
-    } finally {
-        setLoading(false);
-        setLoadingMore(false);
+
+        try {
+            const queryParams: any = { page: pageNumber, limit: 10 };
+
+            const { data } = await api.get('/products', { params: queryParams })
+
+            if (pageNumber === 1) {
+                setProducts(data.data)
+            } else {
+                setProducts(prev => [...prev, ...data.data])
+            }
+
+            setHasMore(data.pagination.page < data.pagination.pages)
+            setPage(pageNumber)
+        } catch (error) {
+            console.error("Error fetching products:", error);
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to load products',
+                text2: 'Please try again later.',
+            });
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
     }
-}
 
     const loadMore = () => {
         if (!loadingMore && !loading && hasMore) {
@@ -74,11 +67,11 @@ export default function Shop() {
             <View className='flex-row gap-2 mx-4 my-2 mb-3'>
                 <View className='flex-row items-center flex-1 bg-white border border-gray-100 rounded-xl'>
                     <Ionicons name="search" size={20} color={COLORS.secondary} className='ml-4' />
-                    <TextInput 
-                        placeholder='Search Products' 
-                        returnKeyType='search' 
+                    <TextInput
+                        placeholder='Search Products'
+                        returnKeyType='search'
                         placeholderTextColor={COLORS.secondary}
-                        className='flex-1 px-4 py-3 ml-1 text-primary' 
+                        className='flex-1 px-4 py-3 ml-1 text-primary'
                     />
                 </View>
 
@@ -102,7 +95,7 @@ export default function Shop() {
                     renderItem={({ item }) => (
                         <ProductCard product={item} />
                     )}
-                    onEndReached={loadMore} 
+                    onEndReached={loadMore}
                     onEndReachedThreshold={0.5}
                     ListFooterComponent={
                         loadingMore ? (

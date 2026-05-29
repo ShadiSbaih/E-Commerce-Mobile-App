@@ -6,8 +6,11 @@ import { COLORS, CATEGORIES } from "@/constants";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { dummyProducts } from "@/assets/assets";
+import { useAuth } from "@clerk/expo";
+import api from "@/constants/api";
 
 export default function EditProduct() {
+    const { getToken } = useAuth();
     const { id } = useLocalSearchParams();
     const router = useRouter();
 
@@ -31,21 +34,29 @@ export default function EditProduct() {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const product: any = dummyProducts.find((p) => p._id === id);
-                setName(product.name);
-                setDescription(product.description || "");
-                setPrice(product.price.toString());
-                setStock(product.stock.toString());
-                setCategory(typeof product.category === 'object' ? product.category.name : product.category);
-                setIsFeatured(product.isFeatured);
+                const { data } = await api.get(`/products/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${await getToken()}`,
+                    },
+                });
+                if (data.success) {
+                    const product = data.data;
 
-                if (product.sizes) setSizes(Array.isArray(product.sizes) ? product.sizes.join(", ") : product.sizes);
+                    setName(product.name);
+                    setDescription(product.description || "");
+                    setPrice(product.price.toString());
+                    setStock(product.stock.toString());
+                    setCategory(typeof product.category === 'object' ? product.category.name : product.category);
+                    setIsFeatured(product.isFeatured);
+                    if (product.sizes) setSizes(Array.isArray(product.sizes) ? product.sizes.join(", ") : product.sizes);
 
-                if (product.images && Array.isArray(product.images)) {
-                    setExistingImages(product.images);
-                } else if (product.images) {
-                    setExistingImages([product.images]);
+                    if (product.images && Array.isArray(product.images)) {
+                        setExistingImages(product.images);
+                    } else if (product.images) {
+                        setExistingImages([product.images]);
+                    }
                 }
+
             } catch (error: any) {
                 console.error("Failed to fetch product:", error);
                 Toast.show({
@@ -101,7 +112,7 @@ export default function EditProduct() {
         try {
             setSubmitting(true);
             const formData = new FormData();
-
+             const token = await getToken();
             formData.append("name", name);
             formData.append("description", description);
             formData.append("price", price);
@@ -125,7 +136,22 @@ export default function EditProduct() {
                     formData.append("images", { uri, name: filename, type: "image/jpeg" } as any);
                 }
             }
-            router.back();
+
+            const { data } = await api.put(`/products/${id}`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            if (data.success) {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Product Updated',
+                    text2: ' Product updated successfully'
+                });
+                router.replace("/admin/products");
+            }
+            
         } catch (error: any) {
             console.error("Failed to update product:", error);
             Toast.show({
@@ -140,52 +166,52 @@ export default function EditProduct() {
 
     if (loading) {
         return (
-            <View className="flex-1 justify-center items-center bg-surface">
+            <View className="items-center justify-center flex-1 bg-surface">
                 <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
         );
     }
 
     return (
-        <ScrollView className="flex-1 bg-surface p-4">
-            <View className="bg-white p-4 rounded-xl border border-gray-100 mb-20">
-                <Text className="text-secondary text-xs font-bold mb-1 uppercase">Product Name *</Text>
+        <ScrollView className="flex-1 p-4 bg-surface">
+            <View className="p-4 mb-20 bg-white border border-gray-100 rounded-xl">
+                <Text className="mb-1 text-xs font-bold uppercase text-secondary">Product Name *</Text>
                 <TextInput
-                    className="bg-surface p-3 rounded-lg mb-4 text-primary"
+                    className="p-3 mb-4 rounded-lg bg-surface text-primary"
                     value={name}
                     onChangeText={setName}
                 />
 
-                <Text className="text-secondary text-xs font-bold mb-1 uppercase">Price ($) *</Text>
+                <Text className="mb-1 text-xs font-bold uppercase text-secondary">Price ($) *</Text>
                 <TextInput
-                    className="bg-surface p-3 rounded-lg mb-4 text-primary"
+                    className="p-3 mb-4 rounded-lg bg-surface text-primary"
                     keyboardType="decimal-pad"
                     value={price}
                     onChangeText={setPrice}
                 />
 
-                <Text className="text-secondary text-xs font-bold mb-1 uppercase">Stock Level</Text>
+                <Text className="mb-1 text-xs font-bold uppercase text-secondary">Stock Level</Text>
                 <TextInput
-                    className="bg-surface p-3 rounded-lg mb-4 text-primary"
+                    className="p-3 mb-4 rounded-lg bg-surface text-primary"
                     keyboardType="number-pad"
                     value={stock}
                     onChangeText={setStock}
                 />
 
-                <Text className="text-secondary text-xs font-bold mb-1 uppercase">Sizes (comma separated)</Text>
+                <Text className="mb-1 text-xs font-bold uppercase text-secondary">Sizes (comma separated)</Text>
                 <TextInput
-                    className="bg-surface p-3 rounded-lg mb-4 text-primary"
+                    className="p-3 mb-4 rounded-lg bg-surface text-primary"
                     placeholder="e.g. S, M, L"
                     value={sizes}
                     onChangeText={setSizes}
                 />
 
-                <Text className="text-secondary text-xs font-bold mb-1 uppercase">
+                <Text className="mb-1 text-xs font-bold uppercase text-secondary">
                     Category
                 </Text>
                 <TouchableOpacity
                     onPress={() => setModalVisible(true)}
-                    className="bg-surface p-3 rounded-lg mb-4 flex-row justify-between items-center"
+                    className="flex-row items-center justify-between p-3 mb-4 rounded-lg bg-surface"
                 >
                     <Text className="text-primary">{category || "Select Category"}</Text>
                     <Ionicons name="chevron-down" size={20} color={COLORS.secondary} />
@@ -193,9 +219,9 @@ export default function EditProduct() {
 
                 <Modal visible={modalVisible} animationType="slide" transparent>
                     <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-                        <View className="flex-1 justify-end bg-black/50">
+                        <View className="justify-end flex-1 bg-black/50">
                             <View className="bg-white rounded-t-2xl p-4 max-h-[50%]">
-                                <Text className="text-lg font-bold text-center mb-4">Select Category</Text>
+                                <Text className="mb-4 text-lg font-bold text-center">Select Category</Text>
                                 <FlatList
                                     data={CATEGORIES}
                                     keyExtractor={(item) => String(item.id)}
@@ -219,7 +245,7 @@ export default function EditProduct() {
                     </TouchableWithoutFeedback>
                 </Modal>
 
-                <Text className="text-secondary text-xs font-bold mb-1 uppercase">Images</Text>
+                <Text className="mb-1 text-xs font-bold uppercase text-secondary">Images</Text>
                 <View className="mb-4">
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         {existingImages.map((uri, index) => (
@@ -227,7 +253,7 @@ export default function EditProduct() {
                                 <Image source={{ uri }} className="w-24 h-24 rounded-lg" />
                                 <TouchableOpacity
                                     onPress={() => removeExistingImage(index)}
-                                    className="absolute top-1 right-1 bg-black/50 rounded-full p-1"
+                                    className="absolute p-1 rounded-full top-1 right-1 bg-black/50"
                                 >
                                     <Ionicons name="close" size={12} color="white" />
                                 </TouchableOpacity>
@@ -235,10 +261,10 @@ export default function EditProduct() {
                         ))}
                         {newImages.map((uri, index) => (
                             <View key={`new-${index}`} className="relative mr-2">
-                                <Image source={{ uri }} className="w-24 h-24 rounded-lg border-2 border-primary" />
+                                <Image source={{ uri }} className="w-24 h-24 border-2 rounded-lg border-primary" />
                                 <TouchableOpacity
                                     onPress={() => removeNewImage(index)}
-                                    className="absolute top-1 right-1 bg-primary rounded-full p-1"
+                                    className="absolute p-1 rounded-full top-1 right-1 bg-primary"
                                 >
                                     <Ionicons name="close" size={12} color="white" />
                                 </TouchableOpacity>
@@ -247,26 +273,26 @@ export default function EditProduct() {
                         {(existingImages.length + newImages.length) < 5 && (
                             <TouchableOpacity
                                 onPress={pickImages}
-                                className="w-24 h-24 rounded-lg bg-gray-100 justify-center items-center border border-dashed border-gray-300"
+                                className="items-center justify-center w-24 h-24 bg-gray-100 border border-gray-300 border-dashed rounded-lg"
                             >
                                 <Ionicons name="add" size={24} color={COLORS.secondary} />
-                                <Text className="text-xs text-secondary mt-1">Add</Text>
+                                <Text className="mt-1 text-xs text-secondary">Add</Text>
                             </TouchableOpacity>
                         )}
                     </ScrollView>
                 </View>
 
-                <Text className="text-secondary text-xs font-bold mb-1 uppercase">Description</Text>
+                <Text className="mb-1 text-xs font-bold uppercase text-secondary">Description</Text>
                 <TextInput
-                    className="bg-surface p-3 rounded-lg mb-6 text-primary h-24"
+                    className="h-24 p-3 mb-6 rounded-lg bg-surface text-primary"
                     multiline
                     textAlignVertical="top"
                     value={description}
                     onChangeText={setDescription}
                 />
 
-                <View className="flex-row justify-between items-center mb-6">
-                    <Text className="text-primary font-bold">Featured Product</Text>
+                <View className="flex-row items-center justify-between mb-6">
+                    <Text className="font-bold text-primary">Featured Product</Text>
                     <Switch
                         value={isFeatured}
                         onValueChange={setIsFeatured}
@@ -282,7 +308,7 @@ export default function EditProduct() {
                     {submitting ? (
                         <ActivityIndicator color="white" />
                     ) : (
-                        <Text className="text-white font-medium text-lg">Update Product</Text>
+                        <Text className="text-lg font-medium text-white">Update Product</Text>
                     )}
                 </TouchableOpacity>
             </View>
