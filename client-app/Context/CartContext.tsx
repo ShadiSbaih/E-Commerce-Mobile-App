@@ -35,12 +35,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(false);
     const [cartTotal, setCartTotal] = useState(0);
 
-    const { getToken, isSignedIn } = useAuth();
+    const { getToken, isSignedIn, signOut } = useAuth();
+
+    /**
+     * Helper to get token with null-check.
+     * If token is null (session expired/invalid), signs the user out.
+     * Returns the token or null if authentication failed.
+     */
+    const getValidToken = async (): Promise<string | null> => {
+        const token = await getToken();
+        if (!token) {
+            console.warn("Token is null - session expired or invalid, signing out");
+            Toast.show({
+                type: "error",
+                text1: "Session Expired",
+                text2: "Please sign in again",
+            });
+            await signOut();
+            return null;
+        }
+        return token;
+    };
 
     const fetchCartItems = async () => {
+        if (!isSignedIn) return;
         try {
             setIsLoading(true);
-            const token = await getToken();
+            const token = await getValidToken();
+            if (!token) return;
+
             const { data } = await api.get("/cart", {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -60,13 +83,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 setCartItems(mappedItems);
                 setCartTotal(serverCart.totalAmount);
             }
-        } catch (error) {
-            console.error("Error fetching cart items:", error);
-            Toast.show({
-                type: "error",
-                text1: "Error",
-                text2: "Failed to fetch cart items",
-            });
+        } catch (error: any) {
+            // Don't show error toast if it was a 401 (already handled by interceptor)
+            if (error.response?.status !== 401) {
+                console.error("Error fetching cart items:", error);
+                Toast.show({
+                    type: "error",
+                    text1: "Error",
+                    text2: "Failed to fetch cart items",
+                });
+            }
         } finally {
             setIsLoading(false);
         }
@@ -84,7 +110,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
         try {
             setIsLoading(true);
-            const token = await getToken();
+            const token = await getValidToken();
+            if (!token) return;
+
             const { data } = await api.post(
                 "/cart/add",
                 {
@@ -106,13 +134,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 });
                 await fetchCartItems();
             }
-        } catch (error) {
-            Toast.show({
-                type: "error",
-                text1: "Error",
-                text2: "Failed to add item to cart",
-            });
-            console.error("Error adding to cart:", error);
+        } catch (error: any) {
+            if (error.response?.status !== 401) {
+                Toast.show({
+                    type: "error",
+                    text1: "Error",
+                    text2: "Failed to add item to cart",
+                });
+                console.error("Error adding to cart:", error);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -129,7 +159,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
         try {
             setIsLoading(true);
-            const token = await getToken();
+            const token = await getValidToken();
+            if (!token) return;
+
             const { data } = await api.delete(`/cart/item/${productId}?size=${size}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -143,8 +175,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 });
                 await fetchCartItems();
             }
-        } catch (error) {
-            console.error("Error removing from cart:", error);
+        } catch (error: any) {
+            if (error.response?.status !== 401) {
+                console.error("Error removing from cart:", error);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -166,7 +200,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (quantity < 1) { return }
         try {
             setIsLoading(true);
-            const token = await getToken();
+            const token = await getValidToken();
+            if (!token) return;
+
             const { data } = await api.put(
                 `/cart/item/${productId}`,
                 { quantity, size },
@@ -185,13 +221,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 await fetchCartItems();
             }
 
-        } catch (error) {
-            console.error("Error updating cart item quantity:", error);
-            Toast.show({
-                type: "error",
-                text1: "Error",
-                text2: "Failed to update cart item quantity",
-            });
+        } catch (error: any) {
+            if (error.response?.status !== 401) {
+                console.error("Error updating cart item quantity:", error);
+                Toast.show({
+                    type: "error",
+                    text1: "Error",
+                    text2: "Failed to update cart item quantity",
+                });
+            }
         } finally {
             setIsLoading(false);
         }
@@ -208,7 +246,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
         try {
             setIsLoading(true);
-            const token = await getToken();
+            const token = await getValidToken();
+            if (!token) return;
+
             const { data } = await api.delete(`/cart`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -223,13 +263,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 setCartItems([]);
                 setCartTotal(0);
             }
-        } catch (error) {
-            console.error("Error clearing cart:", error);
-            Toast.show({
-                type: "error",
-                text1: "Error",
-                text2: "Failed to clear cart",
-            });
+        } catch (error: any) {
+            if (error.response?.status !== 401) {
+                console.error("Error clearing cart:", error);
+                Toast.show({
+                    type: "error",
+                    text1: "Error",
+                    text2: "Failed to clear cart",
+                });
+            }
         } finally {
             setIsLoading(false);
         }
