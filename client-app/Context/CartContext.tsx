@@ -1,4 +1,3 @@
-// import { dummyCart } from "@/assets/assets";
 import api from "@/constants/api";
 import { Product } from "@/constants/types";
 import { useAuth } from "@clerk/expo";
@@ -28,6 +27,7 @@ type CartContextType = {
     itemCount: number;
     isLoading: boolean;
 };
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -37,11 +37,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const { getToken, isSignedIn, signOut } = useAuth();
 
-    /**
-     * Helper to get token with null-check.
-     * If token is null (session expired/invalid), signs the user out.
-     * Returns the token or null if authentication failed.
-     */
+    // دالة مساعدة لحساب السعر الإجمالي محلياً
+    const calculateLocalTotal = (items: CartItem[]) => {
+        return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    };
+
     const getValidToken = async (): Promise<string | null> => {
         const token = await getToken();
         if (!token) {
@@ -57,10 +57,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return token;
     };
 
-    const fetchCartItems = async () => {
+    const fetchCartItems = async (showLoading = true) => {
         if (!isSignedIn) return;
         try {
-            setIsLoading(true);
+            if (showLoading) setIsLoading(true);
             const token = await getValidToken();
             if (!token) return;
 
@@ -71,7 +71,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             });
             if (data.success && data.data) {
                 const serverCart = data.data;
-
                 const mappedItems: CartItem[] = serverCart.items.map((item: any) => ({
                     id: item.product._id,
                     productId: item.product._id,
@@ -84,198 +83,164 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 setCartTotal(serverCart.totalAmount);
             }
         } catch (error: any) {
-            // Don't show error toast if it was a 401 (already handled by interceptor)
             if (error.response?.status !== 401) {
                 console.error("Error fetching cart items:", error);
-                Toast.show({
-                    type: "error",
-                    text1: "Error",
-                    text2: "Failed to fetch cart items",
-                });
             }
         } finally {
-            setIsLoading(false);
+            if (showLoading) setIsLoading(false);
         }
     };
 
     const addToCart = async (product: Product, size: string) => {
         if (!isSignedIn) {
-            Toast.show({
-                type: "error",
-                text1: "Not signed in",
-                text2: "Please sign in to add items to your cart",
-            });
+            Toast.show({ type: "error", text1: "Not signed in", text2: "Please sign in to add items" });
             return;
         }
 
+        const previousCart = [...cartItems];
+        const previousTotal = cartTotal;
+
+        // --- Optimistic Update ---
+        let updatedCart = [...cartItems];
+        const existingIndex = updatedCart.findIndex(item => item.productId === product._id && item.size === size);
+        
+        if (existingIndex >= 0) {
+            updatedCart[existingIndex].quantity += 1;
+        } else {
+            updatedCart.push({
+                id: product._id, // مؤقت لحين رد السيرفر
+                productId: product._id,
+                quantity: 1,
+                product: product,
+                size: size,
+                price: product.price,
+            });
+        }
+        setCartItems(updatedCart);
+        setCartTotal(calculateLocalTotal(updatedCart));
+        
+        Toast.show({ type: "success", text1: "Added to cart", text2: `${product.name} added` });
+
+        // --- API Call ---
         try {
-            setIsLoading(true);
             const token = await getValidToken();
-            if (!token) return;
+            if (!token) throw new Error("No token");
 
             const { data } = await api.post(
                 "/cart/add",
-                {
-                    productId: product._id,
-                    quantity: 1,
-                    size,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                },
+                { productId: product._id, quantity: 1, size },
+                { headers: { Authorization: `Bearer ${token}` } }
             );
+            
             if (data.success) {
-                Toast.show({
-                    type: "success",
-                    text1: "Added to cart",
-                    text2: `${product.name} has been added to your cart`,
-                });
-                await fetchCartItems();
+                // مزامنة صامتة في الخلفية لتحديث الـ IDs بدون تجميد الواجهة
+                fetchCartItems(false); 
+            } else {
+                throw new Error("Server rejected");
             }
         } catch (error: any) {
+            // --- Rollback ---
+            setCartItems(previousCart);
+            setCartTotal(previousTotal);
             if (error.response?.status !== 401) {
-                Toast.show({
-                    type: "error",
-                    text1: "Error",
-                    text2: "Failed to add item to cart",
-                });
-                console.error("Error adding to cart:", error);
+                Toast.show({ type: "error", text1: "Error", text2: "Failed to add item to cart" });
             }
-        } finally {
-            setIsLoading(false);
         }
     };
 
     const removeFromCart = async (productId: string, size: string) => {
-        if (!isSignedIn) {
-            Toast.show({
-                type: "error",
-                text1: "Not signed in",
-                text2: "Please sign in to remove items from your cart",
-            });
-            return;
-        }
-        try {
-            setIsLoading(true);
-            const token = await getValidToken();
-            if (!token) return;
+        if (!isSignedIn) return;
 
-            const { data } = await api.delete(`/cart/item/${productId}?size=${size}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        const previousCart = [...cartItems];
+        const previousTotal = cartTotal;
+
+        // --- Optimistic Update ---
+        const updatedCart = cartItems.filter(item => !(item.productId === productId && item.size === size));
+        setCartItems(updatedCart);
+        setCartTotal(calculateLocalTotal(updatedCart));
+
+        // --- API Call ---
+        try {
+            const token = await getValidToken();
+            if (!token) throw new Error("No token");
+
+            await api.delete(`/cart/item/${productId}?size=${size}`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-            if (data.success) {
-                Toast.show({
-                    type: "success",
-                    text1: "Removed from cart",
-                    text2: `Item has been removed from your cart`,
-                });
-                await fetchCartItems();
-            }
         } catch (error: any) {
+            // --- Rollback ---
+            setCartItems(previousCart);
+            setCartTotal(previousTotal);
             if (error.response?.status !== 401) {
-                console.error("Error removing from cart:", error);
+                Toast.show({ type: "error", text1: "Error", text2: "Failed to remove item" });
             }
-        } finally {
-            setIsLoading(false);
         }
     };
 
-    const updateQuantity = async (
-        productId: string,
-        quantity: number,
-        size: string = "M",
-    ) => {
-        if (!isSignedIn) {
-            Toast.show({
-                type: "error",
-                text1: "Not signed in",
-                text2: "Please sign in to update item quantities",
-            });
-            return;
-        }
-        if (quantity < 1) { return }
-        try {
-            setIsLoading(true);
-            const token = await getValidToken();
-            if (!token) return;
+    const updateQuantity = async (productId: string, quantity: number, size: string = "M") => {
+        if (!isSignedIn || quantity < 1) return;
 
-            const { data } = await api.put(
+        const previousCart = [...cartItems];
+        const previousTotal = cartTotal;
+
+        // --- Optimistic Update ---
+        const updatedCart = cartItems.map(item =>
+            (item.productId === productId && item.size === size)
+                ? { ...item, quantity }
+                : item
+        );
+        setCartItems(updatedCart);
+        setCartTotal(calculateLocalTotal(updatedCart));
+
+        // --- API Call ---
+        try {
+            const token = await getValidToken();
+            if (!token) throw new Error("No token");
+
+            await api.put(
                 `/cart/item/${productId}`,
                 { quantity, size },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-            if (data.success) {
-                Toast.show({
-                    type: "success",
-                    text1: "Cart updated",
-                    text2: `Item quantity has been updated`,
-                });
-                await fetchCartItems();
-            }
-
         } catch (error: any) {
+            // --- Rollback ---
+            setCartItems(previousCart);
+            setCartTotal(previousTotal);
             if (error.response?.status !== 401) {
-                console.error("Error updating cart item quantity:", error);
-                Toast.show({
-                    type: "error",
-                    text1: "Error",
-                    text2: "Failed to update cart item quantity",
-                });
+                Toast.show({ type: "error", text1: "Error", text2: "Failed to update quantity" });
             }
-        } finally {
-            setIsLoading(false);
         }
     };
 
     const clearCart = async () => {
-        if (!isSignedIn) {
-            Toast.show({
-                type: "error",
-                text1: "Not signed in",
-                text2: "Please sign in to clear your cart",
-            });
-            return;
-        }
-        try {
-            setIsLoading(true);
-            const token = await getValidToken();
-            if (!token) return;
+        if (!isSignedIn) return;
 
-            const { data } = await api.delete(`/cart`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        const previousCart = [...cartItems];
+        const previousTotal = cartTotal;
+
+        // --- Optimistic Update ---
+        setCartItems([]);
+        setCartTotal(0);
+
+        // --- API Call ---
+        try {
+            const token = await getValidToken();
+            if (!token) throw new Error("No token");
+
+            await api.delete(`/cart`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-            if (data.success) {
-                Toast.show({
-                    type: "success",
-                    text1: "Cart cleared",
-                    text2: "Your cart has been cleared",
-                });
-                setCartItems([]);
-                setCartTotal(0);
-            }
+            Toast.show({ type: "success", text1: "Cart cleared", text2: "Your cart has been cleared" });
         } catch (error: any) {
+            // --- Rollback ---
+            setCartItems(previousCart);
+            setCartTotal(previousTotal);
             if (error.response?.status !== 401) {
-                console.error("Error clearing cart:", error);
-                Toast.show({
-                    type: "error",
-                    text1: "Error",
-                    text2: "Failed to clear cart",
-                });
+                Toast.show({ type: "error", text1: "Error", text2: "Failed to clear cart" });
             }
-        } finally {
-            setIsLoading(false);
         }
     };
+
     const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
     useEffect(() => {
