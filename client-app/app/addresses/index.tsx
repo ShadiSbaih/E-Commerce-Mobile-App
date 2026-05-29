@@ -1,13 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View, Modal, TextInput, ActivityIndicator } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View, Modal, TextInput, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { COLORS } from "@/constants";
 import type { Address } from "@/constants/types";
 import { dummyAddress } from "@/assets/assets";
+import { useAuth } from "@clerk/expo";
+import api from "@/constants/api";
+import Toast from "react-native-toast-message";
 
 export default function Addresses() {
+
+    const { getToken } = useAuth();
+
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
@@ -31,9 +37,30 @@ export default function Addresses() {
     }, []);
 
     const fetchAddresses = async () => {
-        setAddresses(dummyAddress as any);
-        setLoading(false);
-    };
+        try {
+            setLoading(true);
+            const token = await getToken();
+            const { data } = await api.get("/addresses", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            setAddresses(data);
+        }
+        catch (err) {
+            console.error("Error fetching addresses:", err);
+            Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: "Failed to fetch addresses"
+            });
+        }
+        finally {
+            setLoading(false);
+        }
+    }
+
+
 
     const handleEditSearch = (item: Address) => {
         setIsEditing(true);
@@ -49,13 +76,96 @@ export default function Addresses() {
     };
 
     const handleSaveAddress = async () => {
-        setModalVisible(false);
-        resetForm();
-        fetchAddresses();
+        if (!street || !city || !state || !zipCode || !country) {
+            Toast.show({
+                type: "error",
+                text1: "Validation Error",
+                text2: "Please fill in all fields"
+            });
+            return;
+        }
+        setSubmitting(true);
+        try {
+            const token = await getToken();
+            const data = { type, street, city, state, zipCode, country, isDefault };
+
+            if (isEditing && editingId) {
+                await api.put(`/addresses/${editingId}`, data, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                Toast.show({
+                    type: "success",
+                    text1: "Address Updated",
+                    text2: "Your address has been updated successfully"
+                });
+            }
+            else {
+                await api.post("/addresses", data, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                Toast.show({
+                    type: "success",
+                    text1: "Address Added",
+                    text2: "Your new address has been added successfully"
+                });
+            }
+
+            resetForm();
+        }
+        catch (error) {
+            console.error("Error saving address:", error);
+            Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: "Failed to save address"
+            });
+        }
+        finally {
+            setSubmitting(false);
+            fetchAddresses();
+            setModalVisible(false);
+        }
+
     };
 
     const handleDeleteAddress = async (id: string) => {
+        Alert.alert(
+            "Delete Address",
+            "Are you sure you want to delete this address?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete", style: "destructive", onPress: async () => {
+                        try {
+                            const token = await getToken();
+                            await api.delete(`/addresses/${id}`, {
+                                headers: {
+                                    Authorization: `Bearer ${token}`,
+                                },
+                            });
+                            Toast.show({
+                                type: "success",
+                                text1: "Address Deleted",
+                                text2: "The address has been deleted successfully"
+                            });
+                            fetchAddresses();
+                        } catch (error) {
+                            console.error("Error deleting address:", error);
+                            Toast.show({
+                                type: "error",
+                                text1: "Error",
+                                text2: "Failed to delete address"
+                            });
+                        }
 
+                    }
+                }
+            ]
+        );
     };
 
     const resetForm = () => {

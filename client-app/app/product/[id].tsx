@@ -9,9 +9,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { COLORS } from '@/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
+import api from '@/constants/api';
 
 
 const { width } = Dimensions.get('window');
+
 export default function ProductDetails() {
     const { id } = useLocalSearchParams(); // Get the product ID from the route parameters
     const router = useRouter();
@@ -27,10 +29,23 @@ export default function ProductDetails() {
     const fetchProduct = async () => {
         try {
             setLoading(true);
-            const found = dummyProducts.find(p => p._id === id);
-            setProduct(found ?? null);
+            const { data } = await api.get(`/products/${id}`);
+            if (data.success) {
+                setProduct(data.data);
+                Toast.show({
+                    type: 'success',
+                    text1: 'Product loaded',
+                    text2: 'Product details have been loaded successfully.',
+                });
+            }
+
         } catch (error) {
             console.error("Error fetching product:", error);
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to load product',
+                text2: 'Please try again later.',
+            });
         }
         finally {
             setLoading(false);
