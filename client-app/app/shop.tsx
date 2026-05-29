@@ -1,7 +1,6 @@
 import { ActivityIndicator, FlatList, TextInput, TouchableOpacity, View, Text } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { Product } from '@/constants/types';
-import { dummyProducts } from '@/assets/assets';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';

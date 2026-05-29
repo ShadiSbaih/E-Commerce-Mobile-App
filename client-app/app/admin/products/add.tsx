@@ -73,30 +73,29 @@ export default function AddProduct() {
                     name: filename,
                     type
                 } as any);
-
-                const { data } = await api.post("/products", formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (!data.success) {
-                    Toast.show({
-                        type: 'error',
-                        text1: 'Error',
-                        text2: data.message || 'Failed to add product'
-                    });
-                    return;
-                }
-                Toast.show({
-                    type: 'success',
-                    text1: 'Success',
-                    text2: 'Product added successfully'
-                });
-
-                router.push("/admin/products");
-
             }
+
+            const { data } = await api.post("/products", formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!data.success) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: data.message || 'Failed to add product'
+                });
+                return;
+            }
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Product added successfully'
+            });
+
+            router.push("/admin/products");
         } catch (error) {
             console.error("Error adding product:", error);
             Toast.show({

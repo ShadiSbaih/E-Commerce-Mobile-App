@@ -4,11 +4,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Product } from '@/constants/types';
 import { useCart } from '@/Context/CartContext';
 import { useWishlist } from '@/Context/WishlistContext';
-import { dummyProducts } from '@/assets/assets';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants';
 import { Ionicons } from '@expo/vector-icons';
-import { Toast } from 'react-native-toast-message/lib/src/Toast';
+import Toast from "react-native-toast-message";
 import api from '@/constants/api';
 
 
@@ -32,11 +31,6 @@ export default function ProductDetails() {
             const { data } = await api.get(`/products/${id}`);
             if (data.success) {
                 setProduct(data.data);
-                Toast.show({
-                    type: 'success',
-                    text1: 'Product loaded',
-                    text2: 'Product details have been loaded successfully.',
-                });
             }
 
         } catch (error) {

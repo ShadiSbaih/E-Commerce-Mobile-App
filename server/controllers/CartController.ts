@@ -117,6 +117,10 @@ export const updateCartItem = async (req: Request, res: Response) => {
       await cart.save();
       await cart.populate("items.product", "name images price stock");
       res.json({ success: true, data: cart });
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: "Quantity is required" });
     }
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -127,7 +131,7 @@ export const updateCartItem = async (req: Request, res: Response) => {
 // Delete /api/cart/item/:productId
 export const removeCartItem = async (req: Request, res: Response) => {
   try {
-    const { size } = req.params;
+    const size = req.query.size as string;
 
     const cart = await Cart.findOne({ user: req.user._id });
     if (!cart || !size) {

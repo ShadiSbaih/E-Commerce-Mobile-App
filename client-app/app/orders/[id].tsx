@@ -8,7 +8,7 @@ import { COLORS } from "@/constants";
 import type { Order, Product } from "@/constants/types";
 import api from "@/constants/api";
 import { useAuth } from "@clerk/expo";
-import { Toast } from "react-native-toast-message/lib/src/Toast";
+import Toast from "react-native-toast-message";
 // import { dummyOrders } from "@/assets/assets";
 
 export default function OrderDetails() {

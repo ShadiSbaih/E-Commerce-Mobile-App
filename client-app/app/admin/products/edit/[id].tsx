@@ -5,7 +5,6 @@ import Toast from 'react-native-toast-message';
 import { COLORS, CATEGORIES } from "@/constants";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { dummyProducts } from "@/assets/assets";
 import { useAuth } from "@clerk/expo";
 import api from "@/constants/api";
 

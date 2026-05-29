@@ -13,11 +13,11 @@ export const protect = async (
     const { userId } = await req.auth();
 
     if (!userId) {
-      return res.status(401).json({ success: true, message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
     let user = await User.findOne({ clerkId: userId });
     if (!user) {
-      return res.status(401).json({ success: true, message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
     req.user = user;
     next();

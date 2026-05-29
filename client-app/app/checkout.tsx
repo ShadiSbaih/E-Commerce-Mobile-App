@@ -49,7 +49,7 @@ export default function Checkout() {
       const addressList: Address[] = data.data;
       if (addressList.length > 0) {
         //find default address
-        const def = addressList.find((a: Address) => a.isDefault || addressList[0]);
+        const def = addressList.find((a: Address) => a.isDefault) || addressList[0];
         setSelectedAddress(def ?? null);
       }
     }
@@ -90,7 +90,13 @@ export default function Checkout() {
     setLoading(true);
     try {
       const payload = {
-        shippingAddressId: selecetedAddress._id,
+        shippingAddress: {
+          street: selecetedAddress.street,
+          city: selecetedAddress.city,
+          state: selecetedAddress.state,
+          zipCode: selecetedAddress.zipCode,
+          country: selecetedAddress.country,
+        },
         notes: "Placed via App",
         paymentMethod: "cash",
       }
@@ -107,9 +113,8 @@ export default function Checkout() {
           text1: 'Order placed',
           text2: 'Your order has been placed successfully.',
         });
+        router.replace('/orders');
       }
-      //Cash on delivery 
-      router.replace('/orders');
 
     } catch (error) {
       console.error("Error placing order:", error);
@@ -168,7 +173,7 @@ export default function Checkout() {
                 </Text>
 
                 <TouchableOpacity
-                  onPress={() => router.push('/address' as any)}
+                  onPress={() => router.push('/addresses')}
                 >
                   <Text className="text-sm text-accent">
                     Change
@@ -187,7 +192,7 @@ export default function Checkout() {
             </View>
           ) : (
             <TouchableOpacity
-              onPress={() => router.push('/address' as any)}
+              onPress={() => router.push('/addresses')}
               className="items-center justify-center p-6 mb-6 bg-white border-2 border-gray-300 border-dashed rounded-xl"
             >
               <Text className="font-bold text-primary">

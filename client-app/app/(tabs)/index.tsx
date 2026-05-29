@@ -2,13 +2,14 @@ import React, { useEffect } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Header from '@/components/Header'
 import { Image, ScrollView, View, Dimensions, Text, TouchableOpacity, ActivityIndicator } from 'react-native'
-import { BANNERS, dummyProducts } from './../../assets/assets';
+import { BANNERS } from './../../assets/assets';
 import { useRouter } from 'expo-router';
 import { CATEGORIES } from '@/constants';
 import CategoryItem from '@/components/CategoryItem';
 import ProductCard from '@/components/ProductCard';
 import api from '@/constants/api';
 import Toast from 'react-native-toast-message';
+import { Product } from '@/constants/types';
 
 
 const { width: ScreenWidth } = Dimensions.get('window');
@@ -17,7 +18,7 @@ export default function Home() {
   const router = useRouter();
   const categories = [{ id: "all", name: 'All', icon: 'grid' }, ...CATEGORIES];
 
-  const [products, setProduct] = React.useState([]);
+  const [products, setProduct] = React.useState<Product[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   const [activeBannerIndex, setActiveBannerIndex] = React.useState(0);
