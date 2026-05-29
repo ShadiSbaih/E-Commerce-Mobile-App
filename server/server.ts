@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express, { type Request, type Response } from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
 import { connectDB } from "./config/db.js";
 import { clerkMiddleware } from "@clerk/express";
@@ -51,7 +51,7 @@ app.use("/api/admin", AdminRouter);
 
 /*  Error handling middleware. This should be defined after all other app.use() and routes calls.
     It catches any errors that occur in the route handlers and sends a 500 Internal Server Error response. */
-app.use((err: Error, req: Request, res: Response) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
   res
     .status(500)

@@ -5,7 +5,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { COLORS } from "@/constants";
 import type { Address } from "@/constants/types";
-import { dummyAddress } from "@/assets/assets";
 import { useAuth } from "@clerk/expo";
 import api from "@/constants/api";
 import Toast from "react-native-toast-message";
@@ -45,7 +44,7 @@ export default function Addresses() {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            setAddresses(data);
+            setAddresses(data.data);
         }
         catch (err) {
             console.error("Error fetching addresses:", err);

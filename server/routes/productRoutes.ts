@@ -21,18 +21,18 @@ ProductRouter.get("/:id", getProduct);
 //create product (Admin only)
 ProductRouter.post(
   "/",
-  upload.array("images", 5),
   protect,
   authorize("admin"),
+  upload.array("images", 5),
   createProduct,
 );
 
 //update product (Admin only)
 ProductRouter.put(
   "/:id",
-  upload.array("images", 5),
   protect,
   authorize("admin"),
+  upload.array("images", 5),
   updateProduct,
 );
 

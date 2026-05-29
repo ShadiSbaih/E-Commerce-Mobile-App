@@ -10,10 +10,14 @@ const productSchema = new Schema<IProduct>({
   category: {
     type: String,
     required: true,
-    enum: ["Men", "Women", "Kids", "Shoes", "Bags", "Other"],
+    enum: ["Men", "Women", "Kids", "Shoes", "Bag", "Other"],
     default: "Other",
   },
   stock: { type: Number, required: true, min: 0, default: 0 },
+  ratings: {
+    average: { type: Number, default: 0 },
+    count: { type: Number, default: 0 },
+  },
   isFeatured: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });

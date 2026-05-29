@@ -9,7 +9,7 @@ export default function Cart() {
   const { cartItems, cartTotal, removeFromCart, updateQuantity } = useCart();
   const router = useRouter();
 
-  const shippingCost = 1.99;
+  const shippingCost = 5.00;
   const totalAmount = cartTotal + shippingCost;
 
   return (

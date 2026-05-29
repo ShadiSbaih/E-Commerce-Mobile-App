@@ -23,7 +23,7 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
         try {
             const token = await getToken();
-            const { data } = api.get("/admin/stats", {
+            const { data } = await api.get("/admin/stats", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

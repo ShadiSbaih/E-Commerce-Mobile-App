@@ -90,7 +90,7 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 
     const subtotal = cart.totalAmount;
-    const shippingCost = 2;
+    const shippingCost = 5;
     const tax = parseFloat((subtotal * 0.1).toFixed(2));
     const totalAmount = subtotal + shippingCost + tax;
 
@@ -110,6 +110,10 @@ export const createOrder = async (req: Request, res: Response) => {
     });
 
     if (req.body.paymentMethod === "stripe") {
+      cart.items = [];
+      cart.totalAmount = 0;
+      await cart.save();
+    } else {
       cart.items = [];
       cart.totalAmount = 0;
       await cart.save();

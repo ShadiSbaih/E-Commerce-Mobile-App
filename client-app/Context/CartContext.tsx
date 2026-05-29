@@ -130,7 +130,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         try {
             setIsLoading(true);
             const token = await getToken();
-            const { data } = await api.post(`/cart/item/${productId}?size=${size}`, {
+            const { data } = await api.delete(`/cart/item/${productId}?size=${size}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -222,7 +222,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 });
                 setCartItems([]);
                 setCartTotal(0);
-                await fetchCartItems();
             }
         } catch (error) {
             console.error("Error clearing cart:", error);

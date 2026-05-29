@@ -42,6 +42,12 @@ const orderSchema = new mongoose.Schema<IOrder>(
       enum: ["pending", "paid", "failed", "refunded"],
       default: "pending",
     },
+    orderStatus: {
+      type: String,
+      enum: ["placed", "processing", "shipped", "delivered", "cancelled"],
+      default: "placed",
+    },
+    paymentIntentId: { type: String },
     subtotal: { type: Number, required: true },
     shippingCost: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },

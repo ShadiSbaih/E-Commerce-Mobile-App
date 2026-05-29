@@ -29,6 +29,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         totalProducts,
         totalOrders,
         totalRevenue,
+        recentOrders,
       },
     });
   } catch (error: any) {

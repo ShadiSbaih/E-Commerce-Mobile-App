@@ -1,10 +1,11 @@
-import { Request } from "express";
+import { IUser } from "./index.js";
+import { Document, Types } from "mongoose";
 
 declare global {
     namespace Express {
         interface Request {
-            user?: any;
-            auth?: any;
+            user: (IUser & { _id: Types.ObjectId });
+            auth: () => Promise<{ userId: string | null }>;
         }
     }
 }
