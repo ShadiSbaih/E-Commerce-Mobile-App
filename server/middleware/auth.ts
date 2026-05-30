@@ -35,14 +35,12 @@ export const protect = async (
  */
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!roles.includes(req.user.role)) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "User Role is NOT Authorized to access this route!",
-        });
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "User Role is NOT Authorized to access this route!",
+      });
     }
-    next();
+    return next();
   };
 };
