@@ -1,7 +1,13 @@
 import "dotenv/config";
-import express, { type NextFunction, type Request, type Response } from "express";
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import cors from "cors";
-import { connectDB } from "./config/db.js";
+import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
+import { connectDB, closeDB } from "./config/db.js";
 import { clerkMiddleware } from "@clerk/express";
 import { clerkWebhook } from "./controllers/webhook.js";
 import makeAdmin from "./scripts/makeAdmin.js";
@@ -12,35 +18,44 @@ import AddressRouter from "./routes/addressRoutes.js";
 import AdminRouter from "./routes/adminRoutes.js";
 import { seedProducts } from "./scripts/seedProducts.js";
 
-// Create an Express application instance.
-// This is the main app object that will be used to define routes and middleware.
+// Validate Crucial Environment Variables Immediately
+const requiredEnv = ["MONGO_URI","ADMIN_EMAIL","CLERK_PUBLISHABLE_KEY","CLERK_SECRET_KEY","CLERK_WEBHOOK_SIGNING_SECRET","CLOUDINARY_CLOUD_NAME","CLOUDINARY_API_KEY","CLOUDINARY_API_SECRET"];
+for (const env of requiredEnv) {
+  if (!process.env[env]) {
+    console.error(`❌ Missing critical environment variable: ${env}`);
+    process.exit(1);
+  }
+}
+
 const app = express();
-
-//connect to database
-await connectDB();
-
-//webhook route
-app.post("/api/clerk", express.raw({ type: "application/json" }), clerkWebhook);
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Clerk middleware
-app.use(clerkMiddleware());
-
-// Set the port from environment variable or default to 3000
 const port = process.env.PORT || 3000;
 
-// Basic route to check if server is running
-app.get("/", (req: Request, res: Response) => {
-  res.send("Server is Live!");
-});
+// Global Security Middlewares
+app.use(helmet());
+app.use(cors({ origin: process.env.ALLOWED_ORIGINS || "*" }));
 
-// Health check endpoint. This is a simple route that can be used to verify that the server is running and responsive. It returns a JSON object with a status of "ok". */
-app.get("/api/health", (req: Request, res: Response) => {
-  res.json({ status: "ok" });
+// Rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many requests, please try again later." },
 });
+app.use("/api", limiter);
+
+// Webhook Route (Must run BEFORE express.json())
+app.post("/api/clerk", express.raw({ type: "application/json" }), clerkWebhook);
+
+// Standard Parsers
+app.use(express.json());
+app.use(clerkMiddleware());
+
+// Utility Routes
+app.get("/", (req: Request, res: Response) => res.send("Server is Live!"));
+app.get("/api/health", (req: Request, res: Response) =>
+  res.json({ status: "ok" }),
+);
 
 // Main API routes
 app.use("/api/products", ProductRouter);
@@ -49,24 +64,56 @@ app.use("/api/orders", OrderRouter);
 app.use("/api/addresses", AddressRouter);
 app.use("/api/admin", AdminRouter);
 
-/*  Error handling middleware. This should be defined after all other app.use() and routes calls.
-    It catches any errors that occur in the route handlers and sends a 500 Internal Server Error response. */
+// Centralized Error Handling Middleware
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
-  console.error(err.stack);
-  res
-    .status(500)
-    .json({ message: "Error Middleware!", error: "Internal Server Error" });
+  console.error("🔥 Global Error Caught:", err.stack);
+  res.status(500).json({
+    message: "An internal server error occurred.",
+    error:
+      process.env.NODE_ENV === "development"
+        ? err.message
+        : "Internal Server Error",
+  });
 });
 
-// Create an admin user if not exists when the server starts.
-//  This is useful for testing and initial setup. The makeAdmin function should check if an admin user already exists and create one if it doesn't.
-await makeAdmin();
+let server: any;
 
-//Seed dummy products if no products are present in the database. 
-await seedProducts(process.env.MONGO_URI as string); // Call the seedProducts function to populate the database with dummy products if it's empty. This is useful for testing and development purposes.
+async function startServer() {
+  try {
+    await connectDB();
 
-// Start the server and listen on the specified port.
-// The callback function logs a message to the console indicating that the server is running and provides the URL where it can be accessed.
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
-});
+    server = app.listen(port, () => {
+      console.log(`🚀 Server safely running at http://localhost:${port}`);
+    });
+
+    // Run underlying setups asynchronously without stalling server initialization
+    Promise.all([
+      makeAdmin(),
+      seedProducts(process.env.MONGO_URI as string),
+    ]).catch((err) =>
+      console.error("⚠️ Background task failure during startup:", err),
+    );
+  } catch (error) {
+    console.error("❌ Failed to initialize application:", error);
+    process.exit(1);
+  }
+}
+
+startServer();
+
+// Graceful Shutdown Management
+const gracefulShutdown = (signal: string) => {
+  console.log(`\n🛑 Received ${signal}. Commencing graceful shutdown...`);
+  if (server) {
+    server.close(async () => {
+      console.log("👋 HTTP server closed.");
+      await closeDB();
+      process.exit(0);
+    });
+  } else {
+    process.exit(0);
+  }
+};
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
