@@ -105,7 +105,7 @@ export default function Home() {
                 <CategoryItem item={category}
                   isSelected={category.id === 'all'}
                   onPress={() => router.push({
-                    pathname: `/shop/`,
+                    pathname: `/shop`,
                     params: { category: category.id === "all" ? "" : category.id }
                   })} />
               </TouchableOpacity>
