@@ -7,7 +7,9 @@ export const clerkWebhook = async (req: Request, res: Response) => {
     const SIGNING_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
 
     if (!SIGNING_SECRET) {
-      console.error("Missing CLERK_WEBHOOK_SIGNING_SECRET environment variable.");
+      console.error(
+        "Missing CLERK_WEBHOOK_SIGNING_SECRET environment variable.",
+      );
       return res.status(500).send("Server configuration error");
     }
 
@@ -24,22 +26,25 @@ export const clerkWebhook = async (req: Request, res: Response) => {
     if (event.type === "user.created" || event.type === "user.updated") {
       const userData = {
         clerkId: event.data.id,
-        name: `${event.data?.first_name || ""} ${event.data?.last_name || ""}`.trim() || "Unknown",
+        name:
+          `${event.data?.first_name || ""} ${event.data?.last_name || ""}`.trim() ||
+          "Unknown",
         email: event.data?.email_addresses?.[0]?.email_address ?? "",
         image: event.data?.image_url,
       };
 
       // Atomic upsert pattern prevents race conditions
-      await User.findOneAndUpdate(
-        { clerkId: event.data.id },
-        userData,
-        { upsert: true, new: true }
-      );
+      await User.findOneAndUpdate({ clerkId: event.data.id }, userData, {
+        upsert: true,
+        new: true,
+      });
     }
 
     const { id } = event.data;
     const eventType = event.type;
-    console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
+    console.log(
+      `Received webhook with ID ${id} and event type of ${eventType}`,
+    );
 
     return res.status(200).send("Webhook received");
   } catch (err) {
