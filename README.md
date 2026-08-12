@@ -1,118 +1,160 @@
-# E-Commerce Mobile App
+# 🛒 E-Commerce Mobile App
 
-## Project overview
-This repository contains a mobile e-commerce client built with Expo and React Native. It uses Expo Router for file-based navigation and Clerk for authentication. Product, cart, and wishlist data are currently backed by local mock data to support UI development.
+![Expo](https://img.shields.io/badge/Expo-54.0-000020?style=for-the-badge&logo=expo&logoColor=white)
+![React Native](https://img.shields.io/badge/React_Native-0.81-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF?style=for-the-badge&logo=clerk&logoColor=white)
 
-## Main features
-- Browse products with search and pagination
-- Product details and image galleries
-- Cart management and checkout flow
-- Favorites (wishlist)
-- Orders and order details
-- Admin screens for products and orders (UI only)
-- Email and password authentication with email verification and MFA support
+A full-stack, feature-rich mobile e-commerce application built with **React Native (Expo)** on the frontend and **Node.js (Express) + MongoDB** on the backend. This project utilizes modern tools like **NativeWind** for styling, **Expo Router** for file-based navigation, and **Clerk** for robust authentication.
 
-## Tech stack
-**Frontend**
-- Expo SDK 54, React Native, TypeScript
-- Expo Router for navigation
-- NativeWind (Tailwind CSS) for styling
-- React Context for cart and wishlist state
-- Clerk for authentication
-- React Native Toast Message for feedback
+---
 
-**Backend / database**
-- Not included in this repository
-- UI currently uses local mock data in `assets/assets.ts`
+## ✨ Features
 
-**APIs / libraries**
-- @clerk/expo
-- expo-router
-- expo-secure-store (via Clerk token cache)
-- @react-navigation/* (Router integration)
+- **📱 Beautiful Mobile UI:** Styled with NativeWind (Tailwind CSS) for a modern, responsive feel.
+- **🔐 Secure Authentication:** Seamless sign-up, sign-in, and MFA via Clerk.
+- **🛍️ Product Browsing:** View product catalogs, search, and pagination.
+- **🛒 Shopping Cart & Checkout:** Manage cart items and simulate checkout flows.
+- **❤️ Wishlist:** Save favorite products for later.
+- **📦 Order Management:** View past orders and order details.
+- **⚙️ Admin Dashboard (UI):** Admin screens for product and order management.
+- **☁️ Cloudinary Integration:** Image uploading and management.
+- **🔄 Webhooks:** Real-time data syncing with Svix.
 
-## High-level architecture
-- File-based routing under `app/` with route groups for tabs and auth
-- Global providers in `app/_layout.tsx` (Clerk, cart, wishlist)
-- Feature screens fetch from mock data; replace with real API calls
-- Assets and fixtures stored under `assets/`
+---
 
-## Setup and installation
+## 🛠️ Tech Stack
+
+### Client App (Frontend)
+- **Framework:** Expo SDK 54 & React Native
+- **Navigation:** Expo Router (File-based routing)
+- **Styling:** NativeWind (Tailwind CSS for React Native)
+- **State Management:** React Context (Cart & Wishlist)
+- **Authentication:** Clerk (`@clerk/expo`)
+- **Notifications:** React Native Toast Message
+
+### Server (Backend)
+- **Runtime & Framework:** Node.js, Express.js (v5)
+- **Language:** TypeScript
+- **Database:** MongoDB (Mongoose)
+- **Authentication:** Clerk (`@clerk/express`)
+- **File Uploads:** Multer & Cloudinary
+- **Security:** Helmet, CORS, Express Rate Limit
+- **Webhooks:** Svix
+
+---
+
+## 📸 Screenshots
+
+*(Replace these placeholders with actual screenshots of your app)*
+
+| Home Screen | Product Details | Cart & Checkout | User Profile |
+| :---: | :---: | :---: | :---: |
+| <img src="https://via.placeholder.com/250x500.png?text=Home" width="200" /> | <img src="https://via.placeholder.com/250x500.png?text=Details" width="200" /> | <img src="https://via.placeholder.com/250x500.png?text=Cart" width="200" /> | <img src="https://via.placeholder.com/250x500.png?text=Profile" width="200" /> |
+
+---
+
+## 🚀 Getting Started
+
 ### Prerequisites
-- Node.js 18+ recommended
-- Expo CLI (optional, `npx expo` works without global install)
+- Node.js (v18 or higher recommended)
+- MongoDB Database (Local or MongoDB Atlas)
+- Clerk Account (for authentication)
+- Cloudinary Account (for image uploads)
+- Expo CLI
 
-### Install
+### 1. Clone the repository
 ```bash
+git clone https://github.com/your-username/ecommerce-app.git
+cd ecommerce-app
+```
+
+### 2. Server Setup
+
+Navigate to the `server` directory, install dependencies, and start the backend:
+
+```bash
+cd server
 npm install
+npm run server # Starts the dev server with Nodemon
 ```
 
-## Environment variables
-Create a `.env` file at the project root (or update the existing one):
+### 3. Client Setup
+
+Open a new terminal window, navigate to the `client-app` directory, install dependencies, and start the Expo development server:
 
 ```bash
-EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
-```
-
-Notes:
-- Expo only exposes variables prefixed with `EXPO_PUBLIC_` to the client.
-- The app will throw at startup if the Clerk key is missing.
-
-## Run in development
-```bash
+cd client-app
+npm install
 npm run start
 ```
 
-Optional shortcuts:
-```bash
-npm run android
-npm run ios
-npm run web
+Press `a` to run on Android, `i` to run on iOS, or `w` to run on web.
+
+---
+
+## 🔑 Environment Variables
+
+To run this project, you will need to add the following environment variables.
+
+### Client (`client-app/.env`)
+Create a `.env` file in the `client-app` folder:
+```env
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key
+EXPO_PUBLIC_API_BASE_URL=http://localhost:5000/api # Adjust port if necessary
 ```
 
-## Run in production
-This project does not include build automation config. Typical options:
+### Server (`server/.env`)
+Create a `.env` file in the `server` folder:
+```env
+PORT=5000
+MONGODB_URI=mongodb+srv://your_mongo_connection_string
+CLERK_SECRET_KEY=sk_test_your_clerk_secret_key
+CLERK_WEBHOOK_SECRET=whsec_your_svix_webhook_secret
 
-- **Mobile (recommended):** Use Expo Application Services (EAS) to generate signed builds.
-   ```bash
-   npx eas build --platform android
-   npx eas build --platform ios
-   ```
-- **Web:** Export a static build and host it from a static server.
-   ```bash
-   npx expo export -p web
-   ```
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
 
-If you adopt EAS, add `eas.json` and follow Expo docs for provisioning and store submission.
+---
 
-## Folder overview
-- `app/`: Expo Router screens and layouts
-- `components/`: Reusable UI components
-- `Context/`: Cart and wishlist context providers
-- `assets/`: Images and mock data fixtures
-- `constants/`: Theme tokens and shared types
+## 📂 Folder Structure
 
-## API integration notes
-- Screens currently load data from `assets/assets.ts` (dummy products, cart, wishlist).
-- Replace mock fetch logic with real endpoints and move API calls to a dedicated client module.
-- Consider adding a base URL via `EXPO_PUBLIC_API_BASE_URL` and centralizing request helpers.
+```text
+📦 E-Commerce App
+ ┣ 📂 client-app/        # React Native / Expo Frontend
+ ┃ ┣ 📂 app/             # Expo Router screens & layouts
+ ┃ ┣ 📂 assets/          # Local assets, images, fonts
+ ┃ ┣ 📂 components/      # Reusable UI components
+ ┃ ┣ 📂 constants/       # App constants, themes, colors
+ ┃ ┗ 📂 Context/         # React Context (Cart, Wishlist, etc.)
+ ┃
+ ┗ 📂 server/            # Node.js / Express Backend
+   ┣ 📂 src/             # Source files (Controllers, Routes, Models)
+   ┣ 📜 server.ts        # Main entry point
+   ┗ 📜 package.json     # Backend dependencies
+```
 
-## State management
-- Cart and wishlist use React Context providers in `Context/`.
-- Screen-level state uses React `useState` and `useEffect`.
+---
 
-## Authentication flow
-- Clerk is initialized in `app/_layout.tsx` with a publishable key.
-- Unauthenticated users are redirected to `/(auth)/sign-in`.
-- Sign-in supports password auth and email-based MFA.
-- Sign-up uses email verification and then finalizes the session.
+## 🏗️ Build and Deployment
 
-## Build and deployment notes
-- Expo Router uses `app/` for routing; keep route names stable for deep links.
-- `app.json` enables the new architecture and typed routes.
-- Native modules rely on Expo-managed configuration.
+### Mobile (Client)
+It is recommended to use **Expo Application Services (EAS)** to generate signed builds for app stores.
+```bash
+cd client-app
+npx eas build --platform android
+npx eas build --platform ios
+```
 
-## Troubleshooting
-- **Missing Clerk key:** Ensure `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` is set in `.env`.
-- **Metro cache issues:** Run `npx expo start -c` to clear cache.
-- **Images not loading:** Verify remote image URLs or replace with local assets.
+### Backend (Server)
+You can deploy the Node.js server to any platform that supports Node environments, such as **Render**, **Railway**, **Heroku**, or **Vercel**.
+Ensure you set the appropriate environment variables in your hosting provider's dashboard.
+
+---
+
+## 🤝 Contributing
+Contributions are always welcome! Feel free to open an issue or submit a pull request if you'd like to improve the app.
