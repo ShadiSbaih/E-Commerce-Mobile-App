@@ -12,12 +12,11 @@ export const COLORS = {
 };
 
 export const CATEGORIES = [
-    { id: 1, name: "Home", icon: "home-outline" },
-    { id: 2, name: "Clothing", icon: "shirt-outline" },
-    { id: 3, name: "Jewelry", icon: "diamond-outline" },
-    { id: 4, name: "Art", icon: "color-palette-outline" },
-    { id: 5, name: "Accessories", icon: "bag-handle-outline" },
-    { id: 6, name: "Vintage", icon: "time-outline" },
+    { id: 1, name: "Men", icon: "shirt-outline" },
+    { id: 2, name: "Women", icon: "woman-outline" },
+    { id: 3, name: "Kids", icon: "happy-outline" },
+    { id: 4, name: "Shoes", icon: "footsteps-outline" },
+    { id: 5, name: "Bag", icon: "briefcase-outline" },
 ];
 
 export const PROFILE_MENU = [

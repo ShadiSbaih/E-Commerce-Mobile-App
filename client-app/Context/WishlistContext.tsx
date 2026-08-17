@@ -20,7 +20,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
             const { data } = await api.get("/wishlist");
             if (data.success) setWishlist(data.data);
         } catch (error) {
-            console.error("Error fetching wishlist:", error);
+            console.warn("Could not fetch wishlist:", error);
         } finally {
             setLoading(false);
         }

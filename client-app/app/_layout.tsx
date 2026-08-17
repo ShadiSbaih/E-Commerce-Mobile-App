@@ -10,6 +10,7 @@ import { tokenCache } from "@clerk/expo/token-cache";
 import { CartProvider } from "@/Context/CartContext";
 import { WishlistProvider } from "@/Context/WishlistContext";
 import { setAuthHandlers } from "@/constants/api";
+import BrandLoader from "@/components/BrandLoader";
 
 import "../global.css";
 import { colors } from '@/theme';
@@ -45,15 +46,15 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       segment === "sign-up";
 
     if (!isSignedIn && !isAuthRoute) {
-      router.replace("/sign-in");
+      setTimeout(() => { router.replace("/sign-in"); }, 0);
     }
 
     if (isSignedIn && isAuthRoute) {
-      router.replace("/");
+      setTimeout(() => { router.replace("/"); }, 0);
     }
   }, [isLoaded, isSignedIn, segments, router]);
 
-  if (!isLoaded) return null;
+  if (!isLoaded) return <BrandLoader label="Loading Nimbus" />;
 
   return <>{children}</>;
 }

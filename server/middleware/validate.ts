@@ -44,7 +44,17 @@ export function validateBody<T extends z.ZodTypeAny>(schema: T) {
 export function validateQuery<T extends z.ZodTypeAny>(schema: T) {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.query = schema.parse(req.query) as Record<string, string>;
+      const parsedQuery = schema.parse(req.query);
+
+      // Express 5 exposes `req.query` through a getter, so assigning to it
+      // throws: "Cannot set property query ... which has only a getter".
+      // Define an own property with the validated/coerced values instead.
+      Object.defineProperty(req, "query", {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: parsedQuery,
+      });
       return next();
     } catch (err) {
       if (err instanceof ZodError) {
