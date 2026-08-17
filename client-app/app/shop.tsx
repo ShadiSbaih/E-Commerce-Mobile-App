@@ -78,7 +78,12 @@ export default function Shop() {
             if (filters.maxPrice !== undefined) queryParams.maxPrice = filters.maxPrice;
             if (filters.isFeatured !== undefined) queryParams.isFeatured = filters.isFeatured ? 'true' : 'false';
 
-            const { data } = await api.get('/products', { params: queryParams });
+            const { data } = await api.get('/products', {
+                params: queryParams,
+                // Shop renders its own initial and pagination loading states so
+                // scrolling never gets covered by the app-wide loader.
+                skipGlobalLoading: true,
+            });
 
             if (pageNumber === 1) setProducts(data.data);
             else setProducts(prev => [...prev, ...data.data]);
@@ -161,7 +166,7 @@ export default function Shop() {
 
     const fetchCategories = async () => {
         try {
-            const { data } = await api.get("/categories");
+            const { data } = await api.get("/categories", { skipGlobalLoading: true });
             if (data.success && data.data.length > 0) {
                 setCategoriesList([{ id: 0, name: "All" }, ...data.data]);
             }

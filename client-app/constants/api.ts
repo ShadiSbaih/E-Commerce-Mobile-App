@@ -48,6 +48,13 @@ if (!API_URL) {
 
 const api = axios.create({ baseURL: API_URL });
 
+declare module "axios" {
+  interface AxiosRequestConfig {
+    /** Prevent this request from showing the app-wide blocking loader. */
+    skipGlobalLoading?: boolean;
+  }
+}
+
 // Token provider and sign-out handler to be set by the auth context
 let _getToken: (() => Promise<string | null>) | null = null;
 let _signOut: (() => Promise<void>) | null = null;
@@ -75,7 +82,7 @@ export function setLoadingHandlers(startLoading: () => void, stopLoading: () => 
 // Request interceptor: attach Bearer token to every request
 api.interceptors.request.use(
   async (config) => {
-    _startLoading?.();
+    if (!config.skipGlobalLoading) _startLoading?.();
     if (_getToken) {
       const token = await _getToken();
       if (token) {
@@ -93,11 +100,11 @@ api.interceptors.request.use(
 // Response interceptor: handle 401 by signing the user out
 api.interceptors.response.use(
   (response) => {
-    _stopLoading?.();
+    if (!response.config.skipGlobalLoading) _stopLoading?.();
     return response;
   },
   async (error) => {
-    _stopLoading?.();
+    if (!error.config?.skipGlobalLoading) _stopLoading?.();
     if (error.response?.status === 401 && _signOut) {
       console.warn("Received 401 - signing user out");
       await _signOut();

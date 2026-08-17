@@ -5,7 +5,7 @@ import { colors, radius, spacing, typography } from '@/theme';
 type ButtonProps = {
   children: React.ReactNode;
   onPress?: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'banner';
   disabled?: boolean;
   loading?: boolean;
   accessibilityLabel?: string;
@@ -32,6 +32,7 @@ const styles = StyleSheet.create({
   base: { minHeight: 48, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, borderRadius: radius.md },
   primary: { backgroundColor: colors.primary },
   secondary: { backgroundColor: colors.nimbus200 },
+  banner: { backgroundColor: colors.white },
   ghost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.borderStrong },
   label: { ...typography.body, fontWeight: '600' },
   primaryLabel: { color: colors.white },
