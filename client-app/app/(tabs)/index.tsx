@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   section: {
-    marginHorizontal: spacing.lg,
+    marginHorizontal: spacing.xs,
     marginBottom: spacing['3xl'],
   },
   categorySection: {
