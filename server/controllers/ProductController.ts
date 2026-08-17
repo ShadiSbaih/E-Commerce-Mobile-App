@@ -11,8 +11,36 @@ import Product from "../models/Product.js";
  */
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      category,
+      search,
+      minPrice,
+      maxPrice,
+      isFeatured,
+    } = req.query;
+
     const query: any = { isActive: true };
+
+    if (category && String(category).trim() !== "") {
+      query.category = { $regex: new RegExp(`^${String(category).trim()}$`, "i") };
+    }
+
+    if (search && String(search).trim() !== "") {
+      const searchRegex = new RegExp(String(search).trim(), "i");
+      query.$or = [{ name: searchRegex }, { description: searchRegex }];
+    }
+
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+
+    if (isFeatured !== undefined) {
+      query.isFeatured = isFeatured === "true";
+    }
 
     const total = await Product.countDocuments(query);
     const products = await Product.find(query)
@@ -252,4 +280,28 @@ export const deleteProduct = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+/** @desc    Get all product categories with item count
+ * @route   GET /api/products/categories
+ * @access  Public
+ */
+export const getCategories = async (req: Request, res: Response) => {
+  try {
+    const categories = await Product.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+      { $project: { _id: 0, name: "$_id", count: 1 } },
+      { $sort: { name: 1 } }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: categories,
+    });
+  } catch (error: any) {
+    console.error("Error fetching categories:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 

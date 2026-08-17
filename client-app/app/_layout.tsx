@@ -52,12 +52,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (!isLoaded) return null;
 
-  return (
-    <>
-      <Stack screenOptions={{ headerShown: false }} />
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }
 
 /**

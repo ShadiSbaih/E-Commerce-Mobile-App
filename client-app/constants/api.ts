@@ -7,7 +7,13 @@ import axios from "axios";
 //   default: "http://localhost:3000/api",
 // });
 
-const api = axios.create({ baseURL: "https://e-commerce-rho-three-16.vercel.app/api" });
+const API_URL = process.env.EXPO_PUBLIC_API_BASE_URL || "https://e-commerce-rho-three-16.vercel.app/api";
+
+if (!API_URL) {
+  throw new Error("Missing EXPO_PUBLIC_API_BASE_URL environment variable");
+}
+
+const api = axios.create({ baseURL: API_URL });
 
 // Token provider and sign-out handler to be set by the auth context
 let _getToken: (() => Promise<string | null>) | null = null;

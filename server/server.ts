@@ -16,7 +16,10 @@ import CartRouter from "./routes/cartRoutes.js";
 import OrderRouter from "./routes/ordersRoutes.js";
 import AddressRouter from "./routes/addressRoutes.js";
 import AdminRouter from "./routes/adminRoutes.js";
+import WishlistRouter from "./routes/wishlistRoutes.js";
+import CategoryRouter from "./routes/categoryRoutes.js";
 import { seedProducts } from "./scripts/seedProducts.js";
+import { seedCategories } from "./scripts/seedCategories.js";
 
 // Validate Crucial Environment Variables Immediately
 const requiredEnv = ["MONGO_URI","ADMIN_EMAIL","CLERK_PUBLISHABLE_KEY","CLERK_SECRET_KEY","CLERK_WEBHOOK_SIGNING_SECRET","CLOUDINARY_CLOUD_NAME","CLOUDINARY_API_KEY","CLOUDINARY_API_SECRET"];
@@ -63,6 +66,8 @@ app.use("/api/cart", CartRouter);
 app.use("/api/orders", OrderRouter);
 app.use("/api/addresses", AddressRouter);
 app.use("/api/admin", AdminRouter);
+app.use("/api/wishlist", WishlistRouter);
+app.use("/api/categories", CategoryRouter);
 
 // Centralized Error Handling Middleware
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
@@ -90,6 +95,7 @@ async function startServer() {
     Promise.all([
       makeAdmin(),
       seedProducts(process.env.MONGO_URI as string),
+      seedCategories(),
     ]).catch((err) =>
       console.error("⚠️ Background task failure during startup:", err),
     );

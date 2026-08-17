@@ -16,16 +16,31 @@ const { width: ScreenWidth } = Dimensions.get('window');
 
 export default function Home() {
   const router = useRouter();
-  const categories = [{ id: "all", name: 'All', icon: 'grid' }, ...CATEGORIES];
+  const [categories, setCategories] = React.useState<any[]>([{ id: "all", name: 'All', icon: 'grid-outline' }, ...CATEGORIES]);
 
   const [products, setProduct] = React.useState<Product[]>([]);
+  const [selectedCategory, setSelectedCategory] = React.useState<string>("");
   const [loading, setLoading] = React.useState(true);
 
   const [activeBannerIndex, setActiveBannerIndex] = React.useState(0);
 
-  const fetchProducts = async () => {
+  const fetchCategories = async () => {
     try {
-      const { data } = await api.get("/products");
+      const { data } = await api.get("/categories");
+      if (data.success && data.data.length > 0) {
+        setCategories([{ id: "all", name: 'All', icon: 'grid-outline' }, ...data.data]);
+      }
+    } catch (error) {
+      console.warn("Using fallback static categories");
+    }
+  };
+
+  const fetchProducts = async (categoryName = selectedCategory) => {
+    setLoading(true);
+    try {
+      const queryParams: any = {};
+      if (categoryName) queryParams.category = categoryName;
+      const { data } = await api.get("/products", { params: queryParams });
       setProduct(data.data);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -40,16 +55,21 @@ export default function Home() {
     }
   }
 
+  const handleCategoryPress = (categoryName: string) => {
+    const newCat = categoryName === "All" ? "" : categoryName;
+    setSelectedCategory(newCat);
+    fetchProducts(newCat);
+  };
+
   useEffect(() => {
+    fetchCategories();
     fetchProducts();
   }, [])
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <Header title="Home" showCart showMenu showLogo />
-      <ScrollView className='flex-1 px-4' showsVerticalScrollIndicator={false}
-
-      >
+      <ScrollView className='flex-1 px-4' showsVerticalScrollIndicator={false}>
         {/*The banner slider is here. */}
         <View className='mb-6'>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}
@@ -94,39 +114,45 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Categories section will be here. */}
+        {/* Categories section */}
         <View className='mb-4'>
           <View className='flex-row justify-between mb-4 item-center '>
             <Text className='text-xl font-bold text-primary'>Categories</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className='w-full h-32'>
-            {categories.map((category) => (
-              <TouchableOpacity key={category.id} className='mr-4'>
-                <CategoryItem item={category}
-                  isSelected={category.id === 'all'}
-                  onPress={() => router.push({
-                    pathname: `/shop`,
-                    params: { category: category.id === "all" ? "" : category.id }
-                  })} />
-              </TouchableOpacity>
-            ))}
+            {categories.map((category) => {
+              const isSelected = category.name === 'All' ? !selectedCategory : selectedCategory === category.name;
+              return (
+                <TouchableOpacity key={category.id} className='mr-4'>
+                  <CategoryItem item={category}
+                    isSelected={isSelected}
+                    onPress={() => handleCategoryPress(category.name)} />
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 
-        {/* Popular Products section will be here. */}
+        {/* Popular Products section */}
         <View className='mb-8'>
           <View className='flex-row items-center justify-between mb-4'>
-            <Text className='text-xl font-bold text-primary'>Popular</Text>
-            <TouchableOpacity onPress={() => router.push("/shop")}>
+            <Text className='text-xl font-bold text-primary'>
+              {selectedCategory ? `${selectedCategory} Products` : "Popular"}
+            </Text>
+            <TouchableOpacity onPress={() => router.push({ pathname: "/shop", params: selectedCategory ? { category: selectedCategory } : {} })}>
               <Text className='text-sm text-secondary'>See All</Text>
             </TouchableOpacity>
           </View>
 
           {loading ? (
             <ActivityIndicator size="large" color="#0000ff" />
+          ) : products.length === 0 ? (
+            <View className="items-center justify-center py-8">
+              <Text className="text-secondary">No products found in this category.</Text>
+            </View>
           ) : (
             <View className='flex-row flex-wrap justify-between'>
-              {products.slice(0, 4).map((product) => (
+              {products.slice(0, 6).map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}
             </View>

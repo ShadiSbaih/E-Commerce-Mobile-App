@@ -1,6 +1,7 @@
 import {
   createProduct,
   deleteProduct,
+  getCategories,
   getProduct,
   getProducts,
   updateProduct,
@@ -14,6 +15,9 @@ const ProductRouter = express.Router();
 
 //get all products
 ProductRouter.get("/", getProducts);
+
+//get categories list
+ProductRouter.get("/categories", getCategories);
 
 //get single product
 ProductRouter.get("/:id", getProduct);

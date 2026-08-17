@@ -54,8 +54,18 @@ export type CartItemProps = {
     onUpdateQuantity?: (newQty: number) => void;
 };
 
+export interface Category {
+    _id?: string;
+    id?: string | number;
+    name: string;
+    slug?: string;
+    icon?: string;
+    image?: string;
+    displayOrder?: number;
+}
+
 export type CategoryItemProps = {
-    item: { id: string | number; name: string; icon: string };
+    item: Category;
     isSelected?: boolean;
     onPress?: () => void;
 };
