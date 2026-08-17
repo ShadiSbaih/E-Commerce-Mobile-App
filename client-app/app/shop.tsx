@@ -5,6 +5,7 @@ import { Product } from '@/constants/types';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
+import BrandLoader from '@/components/BrandLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, CATEGORIES } from '@/constants';
 import ProductCard from '@/components/ProductCard';
@@ -143,7 +144,7 @@ export default function Shop() {
                         const isSelected = cat.name === "All" ? !selectedCategory : selectedCategory === cat.name;
                         return (
                             <TouchableOpacity
-                                key={cat.id}
+                                key={String(cat._id ?? cat.id ?? cat.name)}
                                 onPress={() => handleCategorySelect(cat.name === "All" ? "" : cat.name)}
                                 className={`px-4 py-2 mr-2 rounded-full border ${
                                     isSelected
@@ -162,15 +163,15 @@ export default function Shop() {
 
             {loading ? (
                 <View className='items-center justify-center flex-1'>
-                    <ActivityIndicator size="large" color={COLORS.primary} />
+                    <BrandLoader label="Loading products" />
                 </View>
             ) : (
                 <FlatList
                     data={products}
                     keyExtractor={(item) => item._id}
                     numColumns={2}
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100, paddingTop: 8 }}
-                    columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 16 }}
+                    contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 100, paddingTop: 4 }}
+                    columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 8 }}
                     renderItem={({ item }) => (
                         <ProductCard product={item} />
                     )}
