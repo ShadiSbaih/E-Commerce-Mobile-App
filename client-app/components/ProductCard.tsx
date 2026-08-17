@@ -84,6 +84,7 @@ const styles = StyleSheet.create({
   card: {
     width: '48%',
     marginBottom: spacing['2xl'],
+    minWidth: 0,
   },
   imageWrap: {
     aspectRatio: 0.82,
@@ -126,6 +127,7 @@ const styles = StyleSheet.create({
   },
   details: {
     paddingTop: spacing.md,
+    minWidth: 0,
   },
   title: {
     color: colors.textPrimary,
