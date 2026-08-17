@@ -96,8 +96,10 @@ export const updateCartItem = async (req: Request, res: Response) => {
     }
     if (quantity !== undefined) {
       if (quantity <= 0) {
+        // R6: Filter must match both productId AND size to avoid removing
+        // other size variants of the same product.
         cart.items = cart.items.filter(
-          (i) => i.product.toString() !== productId,
+          (i) => !(i.product.toString() === productId && i.size === size),
         );
       } else {
         const product = await Product.findById(productId);
@@ -134,10 +136,15 @@ export const removeCartItem = async (req: Request, res: Response) => {
     const size = req.query.size as string;
 
     const cart = await Cart.findOne({ user: req.user._id });
-    if (!cart || !size) {
+    if (!cart) {
       return res
         .status(404)
         .json({ success: false, message: "Cart not found" });
+    }
+    if (!size) {
+      return res
+        .status(400)
+        .json({ success: false, message: "size query parameter is required" });
     }
 
     cart.items = cart.items.filter((item) => {

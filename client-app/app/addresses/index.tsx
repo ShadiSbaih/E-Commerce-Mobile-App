@@ -5,14 +5,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { COLORS } from "@/constants";
 import type { Address } from "@/constants/types";
-import { useAuth } from "@clerk/expo";
 import api from "@/constants/api";
 import Toast from "react-native-toast-message";
 
 export default function Addresses() {
-
-    const { getToken } = useAuth();
-
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
@@ -31,37 +27,23 @@ export default function Addresses() {
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetchAddresses();
-    }, []);
+    useEffect(() => { fetchAddresses(); }, []);
 
     const fetchAddresses = async () => {
         try {
             setLoading(true);
-            const token = await getToken();
-            const { data } = await api.get("/addresses", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            // R9: interceptor attaches token automatically
+            const { data } = await api.get("/addresses");
             setAddresses(data.data);
-        }
-        catch (err) {
+        } catch (err) {
             console.error("Error fetching addresses:", err);
-            Toast.show({
-                type: "error",
-                text1: "Error",
-                text2: "Failed to fetch addresses"
-            });
-        }
-        finally {
+            Toast.show({ type: "error", text1: "Error", text2: "Failed to fetch addresses" });
+        } finally {
             setLoading(false);
         }
-    }
+    };
 
-
-
-    const handleEditSearch = (item: Address) => {
+    const handleEditAddress = (item: Address) => {
         setIsEditing(true);
         setEditingId(item._id);
         setType(item.type);
@@ -76,113 +58,56 @@ export default function Addresses() {
 
     const handleSaveAddress = async () => {
         if (!street || !city || !state || !zipCode || !country) {
-            Toast.show({
-                type: "error",
-                text1: "Validation Error",
-                text2: "Please fill in all fields"
-            });
+            Toast.show({ type: "error", text1: "Validation Error", text2: "Please fill in all fields" });
             return;
         }
         setSubmitting(true);
         try {
-            const token = await getToken();
-            const data = { type, street, city, state, zipCode, country, isDefault };
-
+            const body = { type, street, city, state, zipCode, country, isDefault };
             if (isEditing && editingId) {
-                await api.put(`/addresses/${editingId}`, data, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                Toast.show({
-                    type: "success",
-                    text1: "Address Updated",
-                    text2: "Your address has been updated successfully"
-                });
+                // R9: interceptor attaches token automatically
+                await api.put(`/addresses/${editingId}`, body);
+                Toast.show({ type: "success", text1: "Address Updated", text2: "Your address has been updated successfully" });
+            } else {
+                await api.post("/addresses", body);
+                Toast.show({ type: "success", text1: "Address Added", text2: "Your new address has been added successfully" });
             }
-            else {
-                await api.post("/addresses", data, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                Toast.show({
-                    type: "success",
-                    text1: "Address Added",
-                    text2: "Your new address has been added successfully"
-                });
-            }
-
             resetForm();
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error saving address:", error);
-            Toast.show({
-                type: "error",
-                text1: "Error",
-                text2: "Failed to save address"
-            });
-        }
-        finally {
+            Toast.show({ type: "error", text1: "Error", text2: "Failed to save address" });
+        } finally {
             setSubmitting(false);
             fetchAddresses();
             setModalVisible(false);
         }
-
     };
 
     const handleDeleteAddress = async (id: string) => {
-        Alert.alert(
-            "Delete Address",
-            "Are you sure you want to delete this address?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete", style: "destructive", onPress: async () => {
-                        try {
-                            const token = await getToken();
-                            await api.delete(`/addresses/${id}`, {
-                                headers: {
-                                    Authorization: `Bearer ${token}`,
-                                },
-                            });
-                            Toast.show({
-                                type: "success",
-                                text1: "Address Deleted",
-                                text2: "The address has been deleted successfully"
-                            });
-                            fetchAddresses();
-                        } catch (error) {
-                            console.error("Error deleting address:", error);
-                            Toast.show({
-                                type: "error",
-                                text1: "Error",
-                                text2: "Failed to delete address"
-                            });
-                        }
-
+        Alert.alert("Delete Address", "Are you sure you want to delete this address?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Delete", style: "destructive", onPress: async () => {
+                    try {
+                        // R9: interceptor attaches token automatically
+                        await api.delete(`/addresses/${id}`);
+                        Toast.show({ type: "success", text1: "Address Deleted", text2: "The address has been deleted successfully" });
+                        fetchAddresses();
+                    } catch (error) {
+                        console.error("Error deleting address:", error);
+                        Toast.show({ type: "error", text1: "Error", text2: "Failed to delete address" });
                     }
-                }
-            ]
-        );
+                },
+            },
+        ]);
     };
 
     const resetForm = () => {
-        setStreet("");
-        setCity("");
-        setState("");
-        setZipCode("");
-        setCountry("");
-        setType("Home");
-        setIsDefault(false);
-        setIsEditing(false);
-        setEditingId(null);
+        setStreet(""); setCity(""); setState(""); setZipCode(""); setCountry("");
+        setType("Home"); setIsDefault(false); setIsEditing(false); setEditingId(null);
     };
 
-    const openAddModal = () => {
-        resetForm();
-        setModalVisible(true);
-    };
+    const openAddModal = () => { resetForm(); setModalVisible(true); };
 
     return (
         <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
@@ -203,8 +128,7 @@ export default function Addresses() {
                                     <View className="flex-row items-center">
                                         <Ionicons
                                             name={item.type === "Home" ? "home-outline" : "briefcase-outline"}
-                                            size={20}
-                                            color={COLORS.primary}
+                                            size={20} color={COLORS.primary}
                                         />
                                         <Text className="ml-2 text-base font-bold text-primary">{item.type}</Text>
                                         {item.isDefault && (
@@ -214,7 +138,7 @@ export default function Addresses() {
                                         )}
                                     </View>
                                     <View className="flex-row items-center gap-4">
-                                        <TouchableOpacity onPress={() => handleEditSearch(item)}>
+                                        <TouchableOpacity onPress={() => handleEditAddress(item)}>
                                             <Ionicons name="pencil-outline" size={20} color={COLORS.secondary} />
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={() => handleDeleteAddress(item._id)}>
@@ -236,8 +160,8 @@ export default function Addresses() {
                 </ScrollView>
             )}
 
-            {/* Add Address Modal */}
-            <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+            {/* Add/Edit Address Modal */}
+            <Modal animationType="slide" transparent visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
                 <View className="justify-end flex-1 bg-black/50">
                     <View className="bg-white rounded-t-3xl p-6 h-[85%]">
                         <View className="flex-row items-center justify-between mb-6">
@@ -289,12 +213,8 @@ export default function Addresses() {
                                 <Text className="text-primary">Set as default address</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity className="items-center w-full py-4 mb-10 rounded-full bg-primary" onPress={handleSaveAddress} disabled={submitting} >
-                                {submitting ? (
-                                    <ActivityIndicator color="white" />
-                                ) : (
-                                    <Text className="text-lg font-bold text-white">Save Address</Text>
-                                )}
+                            <TouchableOpacity className="items-center w-full py-4 mb-10 rounded-full bg-primary" onPress={handleSaveAddress} disabled={submitting}>
+                                {submitting ? <ActivityIndicator color="white" /> : <Text className="text-lg font-bold text-white">Save Address</Text>}
                             </TouchableOpacity>
                         </ScrollView>
                     </View>

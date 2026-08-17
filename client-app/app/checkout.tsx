@@ -10,102 +10,98 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '@/Context/CartContext';
 import { useRouter } from 'expo-router';
 import { Address } from '@/constants/types';
-// import { dummyAddress } from '@/assets/assets';
 import Toast from 'react-native-toast-message';
 import { COLORS } from '@/constants';
 import Header from '@/components/Header';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@clerk/expo';
 import api from '@/constants/api';
 
 export default function Checkout() {
-  const { cartTotal, clearCart } = useCart();
+  const { clearCart } = useCart();
   const router = useRouter();
-  const { getToken } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
 
-  const [selecetedAddress, setSelectedAddress] =
-    useState<Address | null>(null);
+  // R8: Real breakdown fetched from /orders/preview
+  const [breakdown, setBreakdown] = useState({
+    subtotal: 0,
+    shippingCost: 5,
+    tax: 0,
+    totalAmount: 0,
+  });
 
-  const [paymentMethod, setPaymentMethod] = useState<
-    'stripe' | 'cash'
-  >('stripe');
+  // Fixed typo: selecetedAddress → selectedAddress
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
 
-  const shipping = 5;
-  const tax = 0;
-  const total = cartTotal + shipping + tax;
+  // R13: Default to 'cash' — Stripe is not yet implemented
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cash'>('cash');
 
   const fetchAddresses = async () => {
     try {
-
-      const token = await getToken();
-      const { data } = await api.get('/addresses', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // R9: No manual Authorization header — handled by Axios interceptor
+      const { data } = await api.get('/addresses');
       const addressList: Address[] = data.data;
       if (addressList.length > 0) {
-        //find default address
         const def = addressList.find((a: Address) => a.isDefault) || addressList[0];
         setSelectedAddress(def ?? null);
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error("Error fetching addresses:", err);
       Toast.show({
         type: 'error',
         text1: 'Failed to load addresses',
         text2: 'Please try again later.',
       });
-    }
-    finally {
+    } finally {
       setPageLoading(false);
     }
+  };
 
+  // R8: Fetch the real tax/shipping breakdown from the server
+  const fetchPreview = async () => {
+    try {
+      const { data } = await api.get('/orders/preview');
+      if (data.success) setBreakdown(data.data);
+    } catch {
+      // Non-fatal — summary will stay at 0 until cart is non-empty
+    }
   };
 
   const handlePlaceOrder = async () => {
-    if (!selecetedAddress) {
+    if (!selectedAddress) {
       Toast.show({
         type: 'info',
         text1: 'No address selected',
-        text2:
-          'Please select a shipping address before placing your order.',
+        text2: 'Please select a shipping address before placing your order.',
       });
-
       return;
     }
 
     if (paymentMethod === 'stripe') {
-      return Toast.show({
-        type: 'error',
-        text1: 'Info',
-        text2: 'Stripe checkout not implemented yet.',
+      Toast.show({
+        type: 'info',
+        text1: 'Coming soon',
+        text2: 'Card payment is not yet available. Please use Cash on Delivery.',
       });
+      return;
     }
 
     setLoading(true);
     try {
       const payload = {
         shippingAddress: {
-          street: selecetedAddress.street,
-          city: selecetedAddress.city,
-          state: selecetedAddress.state,
-          zipCode: selecetedAddress.zipCode,
-          country: selecetedAddress.country,
+          street: selectedAddress.street,
+          city: selectedAddress.city,
+          state: selectedAddress.state,
+          zipCode: selectedAddress.zipCode,
+          country: selectedAddress.country,
         },
-        notes: "Placed via App",
-        paymentMethod: "cash",
-      }
-      const token = await getToken();
-      const { data } = await api.post('/orders', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        notes: 'Placed via App',
+        paymentMethod: 'cash',
+      };
+      // R9: No manual Authorization header
+      const { data } = await api.post('/orders', payload);
       if (data.success) {
         await clearCart();
         Toast.show({
@@ -115,23 +111,21 @@ export default function Checkout() {
         });
         router.replace('/orders');
       }
-
     } catch (error) {
-      console.error("Error placing order:", error);
+      console.error('Error placing order:', error);
       Toast.show({
         type: 'error',
         text1: 'Failed to place order',
         text2: 'Please try again later.',
       });
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
-
   };
 
   useEffect(() => {
     fetchAddresses();
+    fetchPreview();
   }, []);
 
   if (pageLoading) {
@@ -165,29 +159,22 @@ export default function Checkout() {
             Shipping Address
           </Text>
 
-          {selecetedAddress ? (
+          {selectedAddress ? (
             <View className="p-4 mb-6 bg-white shadow-sm rounded-xl">
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-base font-bold">
-                  {selecetedAddress.type}
+                  {selectedAddress.type}
                 </Text>
 
-                <TouchableOpacity
-                  onPress={() => router.push('/addresses')}
-                >
-                  <Text className="text-sm text-accent">
-                    Change
-                  </Text>
+                <TouchableOpacity onPress={() => router.push('/addresses')}>
+                  <Text className="text-sm text-accent">Change</Text>
                 </TouchableOpacity>
               </View>
 
               <Text className="leading-5 text-secondary">
-                {selecetedAddress.street}
-                {'\n'}
-                {selecetedAddress.city}
-                {'\n'}
-                {selecetedAddress.state} -{' '}
-                {selecetedAddress.zipCode}
+                {selectedAddress.street}{'\n'}
+                {selectedAddress.city}{'\n'}
+                {selectedAddress.state} - {selectedAddress.zipCode}
               </Text>
             </View>
           ) : (
@@ -304,46 +291,25 @@ export default function Checkout() {
 
             {/* Subtotal */}
             <View className="flex-row justify-between mb-2">
-              <Text className="text-gray-600">
-                Subtotal
-              </Text>
-
-              <Text className="font-bold">
-                $ {cartTotal?.toFixed(2) ?? '0.00'}
-              </Text>
+              <Text className="text-gray-600">Subtotal</Text>
+              <Text className="font-bold">$ {breakdown.subtotal.toFixed(2)}</Text>
             </View>
 
             {/* Shipping */}
             <View className="flex-row justify-between mb-2">
-              <Text className="text-gray-600">
-                Shipping
-              </Text>
-
-              <Text className="font-bold">
-                $ {shipping?.toFixed(2) ?? '0.00'}
-              </Text>
+              <Text className="text-gray-600">Shipping</Text>
+              <Text className="font-bold">$ {breakdown.shippingCost.toFixed(2)}</Text>
             </View>
 
-            {/* Tax */}
+            {/* Tax — R8: now matches the 10% the backend applies */}
             <View className="flex-row justify-between mb-2">
-              <Text className="text-gray-600">
-                Tax
-              </Text>
-
-              <Text className="font-bold">
-                $ {tax?.toFixed(2) ?? '0.00'}
-              </Text>
+              <Text className="text-gray-600">Tax (10%)</Text>
+              <Text className="font-bold">$ {breakdown.tax.toFixed(2)}</Text>
             </View>
 
-            {/* Total */}
             <View className="flex-row justify-between pt-4 mt-4 border-t border-gray-200">
-              <Text className="text-lg font-bold text-primary">
-                Total
-              </Text>
-
-              <Text className="text-lg font-bold text-primary">
-                $ {total?.toFixed(2) ?? '0.00'}
-              </Text>
+              <Text className="text-lg font-bold text-primary">Total</Text>
+              <Text className="text-lg font-bold text-primary">$ {breakdown.totalAmount.toFixed(2)}</Text>
             </View>
 
             {/* Place Order Button */}

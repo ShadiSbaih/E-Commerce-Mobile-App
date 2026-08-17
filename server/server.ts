@@ -7,6 +7,7 @@ import express, {
 import cors from "cors";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
+import type { Server as HttpServer } from "http";
 import { connectDB, closeDB } from "./config/db.js";
 import { clerkMiddleware } from "@clerk/express";
 import { clerkWebhook } from "./controllers/webhook.js";
@@ -33,9 +34,17 @@ for (const env of requiredEnv) {
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Global Security Middlewares
+// R19: Parse ALLOWED_ORIGINS as a comma-separated list so multiple
+// origins (e.g. "https://app.example.com,https://admin.example.com")
+// are correctly passed to cors() as an array, not a single string.
+const rawOrigins = process.env.ALLOWED_ORIGINS;
+const corsOrigin: string | string[] | boolean =
+  rawOrigins
+    ? rawOrigins.split(",").map((o) => o.trim())
+    : "*";
+
 app.use(helmet());
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS || "*" }));
+app.use(cors({ origin: corsOrigin }));
 
 // Rate limiter
 const limiter = rateLimit({
@@ -81,7 +90,8 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-let server: any;
+// R12: Typed as HttpServer instead of any
+let server: HttpServer | undefined;
 
 async function startServer() {
   try {
