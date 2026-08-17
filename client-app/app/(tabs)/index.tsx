@@ -153,7 +153,8 @@ export default function Home() {
                     <Text style={styles.bannerTitle}>{banner.title}</Text>
                     <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text>
                     <Button
-                      variant="secondary"
+                      variant="banner"
+                      style={styles.exploreButton}
                       onPress={() => router.push('/shop')}
                     >
                       Explore picks
@@ -290,9 +291,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: spacing.xl,
     right: spacing.xl,
-    bottom: spacing.xl,
+    // Keep the CTA above the pagination dots on narrow screens.
+    bottom: spacing['2xl'],
     gap: spacing.sm,
     alignItems: 'flex-start',
+    zIndex: 2,
+  },
+  exploreButton: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.white,
+    elevation: 3,
   },
   eyebrow: {
     color: colors.white,
@@ -311,10 +323,11 @@ const styles = StyleSheet.create({
   pagination: {
     position: 'absolute',
     right: spacing['2xl'],
-    bottom: spacing.lg,
+    bottom: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    zIndex: 3,
   },
   paginationDot: {
     width: 6,

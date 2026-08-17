@@ -1,33 +1,421 @@
-import React, { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import Toast from 'react-native-toast-message';
-import { useCart } from '@/Context/CartContext';
-import { useWishlist } from '@/Context/WishlistContext';
-import type { Product } from '@/constants/types';
-import api from '@/constants/api';
-import Badge from '@/components/Badge';
-import Button from '@/components/Button';
-import EmptyState from '@/components/EmptyState';
-import BrandLoader from '@/components/BrandLoader';
-import { colors, radius, spacing, typography } from '@/theme';
+import React, { useEffect, useState } from "react";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
+import { useCart } from "@/Context/CartContext";
+import { useWishlist } from "@/Context/WishlistContext";
+import type { Product } from "@/constants/types";
+import api from "@/constants/api";
+import Badge from "@/components/Badge";
+import EmptyState from "@/components/EmptyState";
+import BrandLoader from "@/components/BrandLoader";
+import { colors, radius, spacing, typography } from "@/theme";
 
 export default function ProductDetails() {
-  const { id } = useLocalSearchParams(); const router = useRouter(); const { width } = useWindowDimensions(); const insets = useSafeAreaInsets();
-  const [product, setProduct] = useState<Product | null>(null); const [loading, setLoading] = useState(true); const [selectedSize, setSelectedSize] = useState<string | null>(null); const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const { addToCart, itemCount } = useCart(); const { toggleWishlist, isInWishlist } = useWishlist();
-  useEffect(() => { (async () => { setLoading(true); try { const { data } = await api.get(`/products/${id}`); if (data.success) setProduct(data.data); } catch { Toast.show({ type: 'error', text1: "We couldn't load this product.", text2: 'Please try again.' }); } finally { setLoading(false); } })(); }, [id]);
-  if (loading) return <SafeAreaView style={styles.loader}><BrandLoader label="Loading product" /></SafeAreaView>;
-  if (!product) return <SafeAreaView style={styles.safe}><EmptyState title="Product not found" description="This item may no longer be available." actionLabel="Browse products" onAction={() => router.replace('/shop')} icon="cube-outline" /></SafeAreaView>;
-  const liked = isInWishlist(product._id); const add = () => { if (product.sizes?.length && !selectedSize) { Toast.show({ type: 'info', text1: 'Choose an option first', text2: 'Select a size before adding this item to your cart.' }); return; } addToCart(product, selectedSize || 'Default'); };
-  return <SafeAreaView style={styles.safe} edges={['top']}><View style={styles.page}><ScrollView contentContainerStyle={[styles.content, { paddingBottom: 118 + insets.bottom }]} showsVerticalScrollIndicator={false}>
-    <View style={styles.gallery}><ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={(event) => setActiveImageIndex(Math.round(event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width))}>{product.images?.map((uri, index) => <Image key={index} source={{ uri }} style={{ width, height: width * 1.05 }} resizeMode="cover" accessibilityLabel={`${product.name}, image ${index + 1}`} />)}</ScrollView><View style={styles.topActions}><CircleButton label="Go back" icon="arrow-back" onPress={() => router.back()} /><CircleButton label={liked ? 'Remove from favorites' : 'Add to favorites'} icon={liked ? 'heart' : 'heart-outline'} color={liked ? colors.nimbus500 : colors.primary} onPress={() => toggleWishlist(product)} /></View>{product.images.length > 1 ? <View style={styles.dots}>{product.images.map((_, index) => <View key={index} style={[styles.dot, activeImageIndex === index && styles.dotActive]} />)}</View> : null}</View>
-    <View style={styles.details}><Badge tone="highlight">Independent maker</Badge><View style={styles.titleRow}><Text style={styles.title}>{product.name}</Text><View style={styles.rating}><Ionicons name="star" size={16} color={colors.warning}/><Text style={styles.ratingText}>{product.ratings?.average?.toFixed(1) || 'New'}{product.ratings?.count ? ` · ${product.ratings.count}` : ''}</Text></View></View><Text style={styles.price}>${product.price.toFixed(2)}</Text><View style={styles.maker}><Ionicons name="storefront-outline" size={19} color={colors.textSecondary}/><View><Text style={styles.makerCaption}>Made by</Text><Text style={styles.makerName}>An independent shop</Text></View></View>
-    {product.sizes?.length ? <View style={styles.optionGroup}><Text style={styles.sectionTitle}>Choose size</Text><View style={styles.sizes}>{product.sizes.map(size => <Pressable key={size} accessibilityRole="radio" accessibilityState={{ selected: selectedSize === size }} onPress={() => setSelectedSize(size)} style={[styles.size, selectedSize === size && styles.sizeSelected]}><Text style={[styles.sizeText, selectedSize === size && styles.sizeTextSelected]}>{size}</Text></Pressable>)}</View></View> : null}
-    <View style={styles.delivery}><Ionicons name="cube-outline" size={20} color={colors.textSecondary}/><View><Text style={styles.deliveryTitle}>Ready to ship</Text><Text style={styles.deliveryText}>Made with care and packed by the seller.</Text></View></View><Text style={styles.sectionTitle}>About this item</Text><Text style={styles.description}>{product.description}</Text></View>
-  </ScrollView><View style={[styles.footer, { paddingBottom: Math.max(spacing.md, insets.bottom) }]}><Button onPress={add} style={styles.addButton}>Add to cart</Button><Pressable accessibilityRole="button" accessibilityLabel={`Open cart, ${itemCount} items`} style={styles.cartButton} onPress={() => router.push('/(tabs)/cart')}><Ionicons name="bag-outline" size={23} color={colors.primary}/>{itemCount ? <View style={styles.count}><Text style={styles.countText}>{itemCount}</Text></View> : null}</Pressable></View></View></SafeAreaView>;
+  const { id } = useLocalSearchParams();
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const { addToCart, itemCount } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  useEffect(() => {
+    async function fetchProduct() {
+      setLoading(true);
+      try {
+        const { data } = await api.get(`/products/${id}`);
+        if (data.success) setProduct(data.data);
+      } catch {
+        Toast.show({
+          type: "error",
+          text1: "We couldn't load this product.",
+          text2: "Please try again.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProduct();
+  }, [id]);
+  if (loading)
+    return (
+      <SafeAreaView style={styles.loader}>
+        <BrandLoader label="Loading product" />
+      </SafeAreaView>
+    );
+  if (!product)
+    return (
+      <SafeAreaView style={styles.safe}>
+        <EmptyState
+          title="Product not found"
+          description="This item may no longer be available."
+          actionLabel="Browse products"
+          onAction={() => router.replace("/shop")}
+          icon="cube-outline"
+        />
+      </SafeAreaView>
+    );
+  const liked = isInWishlist(product._id);
+  const add = () => {
+    if (product.sizes?.length && !selectedSize) {
+      Toast.show({
+        type: "info",
+        text1: "Choose an option first",
+        text2: "Select a size before adding this item to your cart.",
+      });
+      return;
+    }
+    addToCart(product, selectedSize || "Default");
+  };
+  return (
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <View style={styles.page}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.gallery}>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) =>
+                setActiveImageIndex(
+                  Math.round(
+                    event.nativeEvent.contentOffset.x /
+                      event.nativeEvent.layoutMeasurement.width,
+                  ),
+                )
+              }
+            >
+              {product.images?.map((uri, index) => (
+                <Image
+                  key={index}
+                  source={{ uri }}
+                  style={{ width, height: width * 1.05 }}
+                  resizeMode="cover"
+                  accessibilityLabel={`${product.name}, image ${index + 1}`}
+                />
+              ))}
+            </ScrollView>
+            <View style={styles.topActions}>
+              <CircleButton
+                label="Go back"
+                icon="arrow-back"
+                onPress={() => router.back()}
+              />
+              <CircleButton
+                label={liked ? "Remove from favorites" : "Add to favorites"}
+                icon={liked ? "heart" : "heart-outline"}
+                color={liked ? colors.nimbus500 : colors.primary}
+                onPress={() => toggleWishlist(product)}
+              />
+            </View>
+            {product.images.length > 1 && (
+              <View style={styles.dots}>
+                {product.images.map((_, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.dot,
+                      activeImageIndex === index && styles.dotActive,
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+          <View style={styles.details}>
+            <Badge tone="highlight">Independent maker</Badge>
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>{product.name}</Text>
+              <View style={styles.rating}>
+                <Ionicons name="star" size={16} color={colors.warning} />
+                <Text style={styles.ratingText}>
+                  {product.ratings?.average?.toFixed(1) || "New"}
+                  {product.ratings?.count ? ` · ${product.ratings.count}` : ""}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.price}>${product.price.toFixed(2)}</Text>
+            <View style={styles.maker}>
+              <Ionicons
+                name="storefront-outline"
+                size={19}
+                color={colors.textSecondary}
+              />
+              <View>
+                <Text style={styles.makerCaption}>Made by</Text>
+                <Text style={styles.makerName}>An independent shop</Text>
+              </View>
+            </View>
+            {product.sizes?.length ? (
+              <View style={styles.optionGroup}>
+                <Text style={styles.sectionTitle}>Choose size</Text>
+                <View style={styles.sizes}>
+                  {product.sizes.map((size) => (
+                    <Pressable
+                      key={size}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: selectedSize === size }}
+                      onPress={() => setSelectedSize(size)}
+                      style={[
+                        styles.size,
+                        selectedSize === size && styles.sizeSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.sizeText,
+                          selectedSize === size && styles.sizeTextSelected,
+                        ]}
+                      >
+                        {size}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+            <View style={styles.delivery}>
+              <Ionicons
+                name="cube-outline"
+                size={20}
+                color={colors.textSecondary}
+              />
+              <View>
+                <Text style={styles.deliveryTitle}>Ready to ship</Text>
+                <Text style={styles.deliveryText}>
+                  Made with care and packed by the seller.
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.sectionTitle}>About this item</Text>
+            <Text style={styles.description}>{product.description}</Text>
+          </View>
+        </ScrollView>
+        <View style={[styles.footer, { height: 64 + insets.bottom }]}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Add to cart"
+            onPress={add}
+            activeOpacity={0.82}
+            style={styles.addButton}
+          >
+            <Ionicons name="bag-outline" size={20} color={colors.white} />
+            <Text style={styles.addButtonText}>Add to cart</Text>
+          </TouchableOpacity>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Open cart, ${itemCount} items`}
+            style={styles.cartButton}
+            onPress={() => router.push("/(tabs)/cart")}
+          >
+            <Ionicons name="bag-outline" size={23} color={colors.primary} />
+            {itemCount ? (
+              <View style={styles.count}>
+                <Text style={styles.countText}>{itemCount}</Text>
+              </View>
+            ) : null}
+          </Pressable>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
 }
-function CircleButton({ label, icon, onPress, color = colors.primary }: { label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void; color?: string }) { return <Pressable accessibilityRole="button" accessibilityLabel={label} style={styles.circleButton} onPress={onPress}><Ionicons name={icon} size={23} color={color}/></Pressable>; }
-const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: colors.background }, page: { flex: 1 }, loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }, content: {}, gallery: { position: 'relative', backgroundColor: colors.surfaceMuted }, topActions: { position: 'absolute', top: spacing.md, left: spacing.lg, right: spacing.lg, flexDirection: 'row', justifyContent: 'space-between' }, circleButton: { width: 44, height: 44, borderRadius: radius.full, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' }, dots: { position: 'absolute', bottom: spacing.md, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: spacing.xs }, dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.white, opacity: 0.6 }, dotActive: { width: 18, opacity: 1 }, details: { padding: spacing.xl, gap: spacing.lg }, titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing.md }, title: { flex: 1, color: colors.textPrimary, ...typography.h2 }, rating: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs }, ratingText: { color: colors.textSecondary, ...typography.bodySmall }, price: { color: colors.textPrimary, ...typography.h2 }, maker: { flexDirection: 'row', gap: spacing.md, paddingVertical: spacing.lg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border }, makerCaption: { color: colors.textMuted, ...typography.caption }, makerName: { color: colors.textPrimary, ...typography.bodySmall, fontWeight: '600' }, optionGroup: { gap: spacing.md }, sectionTitle: { color: colors.textPrimary, ...typography.h3 }, sizes: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, size: { minWidth: 52, minHeight: 44, paddingHorizontal: spacing.md, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: colors.borderStrong, borderRadius: radius.md, backgroundColor: colors.surface }, sizeSelected: { borderColor: colors.primary, backgroundColor: colors.primary }, sizeText: { color: colors.textSecondary, ...typography.bodySmall, fontWeight: '600' }, sizeTextSelected: { color: colors.white, fontWeight: '700' }, delivery: { flexDirection: 'row', gap: spacing.md, padding: spacing.lg, backgroundColor: colors.surfaceSoft, borderRadius: radius.md }, deliveryTitle: { color: colors.textPrimary, ...typography.bodySmall, fontWeight: '600' }, deliveryText: { color: colors.textSecondary, ...typography.caption, marginTop: spacing.xs }, description: { color: colors.textSecondary, ...typography.body }, footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingTop: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', gap: spacing.md, backgroundColor: colors.surface, borderTopWidth: 1, borderColor: colors.border }, addButton: { flex: 1 }, cartButton: { width: 52, minHeight: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.nimbus200, borderRadius: radius.md }, count: { position: 'absolute', top: 3, right: 2, width: 16, height: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.nimbus500, borderRadius: 8 }, countText: { color: colors.white, fontSize: 9, fontWeight: '600' } });
+function CircleButton({
+  label,
+  icon,
+  onPress,
+  color = colors.primary,
+}: {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+  color?: string;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={styles.circleButton}
+      onPress={onPress}
+    >
+      <Ionicons name={icon} size={23} color={color} />
+    </Pressable>
+  );
+}
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  page: { flex: 1 },
+  loader: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
+  },
+  gallery: { position: "relative", backgroundColor: colors.surfaceMuted },
+  topActions: {
+    position: "absolute",
+    top: spacing.md,
+    left: spacing.lg,
+    right: spacing.lg,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  circleButton: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.full,
+    backgroundColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dots: {
+    position: "absolute",
+    bottom: spacing.md,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: spacing.xs,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.white,
+    opacity: 0.6,
+  },
+  dotActive: { width: 18, opacity: 1 },
+  details: { padding: spacing.xl, gap: spacing.lg },
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
+  },
+  title: { flex: 1, color: colors.textPrimary, ...typography.h2 },
+  rating: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  ratingText: { color: colors.textSecondary, ...typography.bodySmall },
+  price: { color: colors.textPrimary, ...typography.h2 },
+  maker: {
+    flexDirection: "row",
+    gap: spacing.md,
+    paddingVertical: spacing.lg,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  makerCaption: { color: colors.textMuted, ...typography.caption },
+  makerName: {
+    color: colors.textPrimary,
+    ...typography.bodySmall,
+    fontWeight: "600",
+  },
+  optionGroup: { gap: spacing.md },
+  sectionTitle: { color: colors.textPrimary, ...typography.h3 },
+  sizes: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  size: {
+    minWidth: 52,
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: colors.borderStrong,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+  },
+  sizeSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  sizeText: {
+    color: colors.textSecondary,
+    ...typography.bodySmall,
+    fontWeight: "600",
+  },
+  sizeTextSelected: { color: colors.white, fontWeight: "700" },
+  delivery: {
+    flexDirection: "row",
+    gap: spacing.md,
+    padding: spacing.lg,
+    backgroundColor: colors.surfaceSoft,
+    borderRadius: radius.md,
+  },
+  deliveryTitle: {
+    color: colors.textPrimary,
+    ...typography.bodySmall,
+    fontWeight: "600",
+  },
+  deliveryText: {
+    color: colors.textSecondary,
+    ...typography.caption,
+    marginTop: spacing.xs,
+  },
+  description: { color: colors.textSecondary, ...typography.body },
+  footer: {
+    flexShrink: 0,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderColor: colors.border,
+  },
+  addButton: {
+    width: "75%",
+    flexGrow: 0,
+    flexShrink: 0,
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    backgroundColor: "#000",
+  },
+  addButtonText: { color: colors.white, ...typography.body, fontWeight: "600" },
+  cartButton: {
+    width: 52,
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.nimbus200,
+    borderRadius: radius.md,
+  },
+  count: {
+    position: "absolute",
+    top: 3,
+    right: 2,
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.nimbus500,
+    borderRadius: 8,
+  },
+  countText: { color: colors.white, fontSize: 9, fontWeight: "600" },
+});
