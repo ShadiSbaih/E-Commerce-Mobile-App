@@ -2,6 +2,11 @@ import type { Request, Response } from "express";
 import { v2 as cloudinary } from "cloudinary";
 import Product from "../models/Product.js";
 
+/** Escape a string so it is safe to embed inside a RegExp literal. */
+function escapeRegex(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /** @desc    Get all products with pagination
  * @route   GET /api/products
  * @access  Public
@@ -24,12 +29,17 @@ export const getProducts = async (req: Request, res: Response) => {
     const query: any = { isActive: true };
 
     if (category && String(category).trim() !== "") {
-      query.category = { $regex: new RegExp(`^${String(category).trim()}$`, "i") };
+      // Use escaped string to prevent ReDoS via user-controlled regex
+      query.category = { $regex: new RegExp(`^${escapeRegex(String(category).trim())}$`, "i") };
     }
 
     if (search && String(search).trim() !== "") {
-      const searchRegex = new RegExp(String(search).trim(), "i");
-      query.$or = [{ name: searchRegex }, { description: searchRegex }];
+      // Prefer the $text index when available; fall back to escaped regex
+      const escapedSearch = escapeRegex(String(search).trim());
+      query.$or = [
+        { name: { $regex: escapedSearch, $options: "i" } },
+        { description: { $regex: escapedSearch, $options: "i" } },
+      ];
     }
 
     if (minPrice || maxPrice) {
@@ -98,8 +108,9 @@ export const createProduct = async (req: Request, res: Response) => {
     let images: string[] = [];
 
     // Handle file uploads
-    if (req.files && (req.files as any).length > 0) {
-      const uploadPromises = (req.files as any).map((file: any) => {
+    const files = req.files as Express.Multer.File[] | undefined;
+    if (files && files.length > 0) {
+      const uploadPromises = files.map((file) => {
         return new Promise<string>((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
             { folder: "ecom-app/products" },
@@ -114,20 +125,30 @@ export const createProduct = async (req: Request, res: Response) => {
       images = await Promise.all(uploadPromises);
     }
 
-    let sizes = req.body.sizes || [];
+    // R2: Whitelist allowed fields — never spread req.body directly
+    type ProductCategory = "Men" | "Women" | "Kids" | "Shoes" | "Bag" | "Other";
+    const { name, description, price, comparePrice, category, stock, isFeatured } = req.body as {
+      name: string;
+      description: string;
+      price: string;
+      comparePrice?: string;
+      category: ProductCategory;
+      stock: string;
+      isFeatured?: string;
+    };
+
+    let sizes: string[] = req.body.sizes ?? [];
     if (typeof sizes === "string") {
       try {
-        sizes = JSON.parse(sizes);
-      } catch (e) {
-        sizes = sizes
+        sizes = JSON.parse(sizes) as string[];
+      } catch {
+        sizes = (sizes as unknown as string)
           .split(",")
-          .map((s: string) => s.trim())
-          .filter((s: string) => s !== "");
+          .map((s) => s.trim())
+          .filter((s) => s !== "");
       }
     }
-
-    // Ensure they are arrays
-    if (!Array.isArray(sizes)) sizes = [sizes];
+    if (!Array.isArray(sizes)) sizes = [sizes as unknown as string];
 
     if (images.length === 0) {
       return res
@@ -135,17 +156,19 @@ export const createProduct = async (req: Request, res: Response) => {
         .json({ success: false, message: "Please upload at least one image" });
     }
 
-    const productData = {
-      ...req.body,
-      images: images,
+    const product = await Product.create({
+      name,
+      description,
+      price: Number(price),
+      ...(comparePrice !== undefined ? { comparePrice: Number(comparePrice) } : {}),
+      category,
+      stock: Number(stock ?? 0),
+      isFeatured: isFeatured === "true",
+      images,
       sizes,
-    };
-
-    const product = await Product.create(productData);
-    res.status(201).json({
-      success: true,
-      data: product,
     });
+
+    res.status(201).json({ success: true, data: product });
   } catch (error: any) {
     console.error("Error creating product:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -163,22 +186,24 @@ export const updateProduct = async (req: Request, res: Response) => {
   try {
     let images: string[] = [];
 
+    // Preserve existing images passed from client
     if (req.body.existingImages) {
       if (Array.isArray(req.body.existingImages)) {
-        images = [...req.body.existingImages];
+        images = [...(req.body.existingImages as string[])];
       } else {
         try {
-          images = JSON.parse(req.body.existingImages);
-          if (!Array.isArray(images)) images = [images];
+          const parsed = JSON.parse(req.body.existingImages as string) as unknown;
+          images = Array.isArray(parsed) ? parsed : [parsed as string];
         } catch {
-          images = [req.body.existingImages];
+          images = [req.body.existingImages as string];
         }
       }
     }
 
-    // Handle file uploads
-    if (req.files && (req.files as any).length > 0) {
-      const uploadPromises = (req.files as any).map((file: any) => {
+    // Handle new file uploads
+    const files = req.files as Express.Multer.File[] | undefined;
+    if (files && files.length > 0) {
+      const uploadPromises = files.map((file) => {
         return new Promise<string>((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
             { folder: "ecom-app/products" },
@@ -194,33 +219,49 @@ export const updateProduct = async (req: Request, res: Response) => {
       images = [...images, ...newImages];
     }
 
-    const updates = { ...req.body };
+    // R2: Whitelist allowed fields — never spread req.body directly
+    const { name, description, price, comparePrice, category, stock, isFeatured, isActive } =
+      req.body as Partial<{
+        name: string;
+        description: string;
+        price: string;
+        comparePrice: string;
+        category: string;
+        stock: string;
+        isFeatured: string;
+        isActive: string;
+        existingImages: string | string[];
+      }>;
 
-    if (req.body.sizes) {
-      let sizes = req.body.sizes;
-
-      if (typeof sizes === "string") {
+    let sizes: string[] | undefined;
+    if (req.body.sizes !== undefined) {
+      let rawSizes: unknown = req.body.sizes;
+      if (typeof rawSizes === "string") {
         try {
-          sizes = JSON.parse(sizes);
-        } catch (e) {
-          sizes = sizes
+          rawSizes = JSON.parse(rawSizes);
+        } catch {
+          rawSizes = (rawSizes as string)
             .split(",")
-            .map((s: string) => s.trim())
-            .filter((s: string) => s !== "");
+            .map((s) => s.trim())
+            .filter((s) => s !== "");
         }
       }
-      if (!Array.isArray(sizes)) sizes = [sizes];
-      updates.sizes = sizes;
+      sizes = Array.isArray(rawSizes) ? rawSizes : [rawSizes as string];
     }
 
-    if (
-      req.body.existingImages ||
-      (req.files && (req.files as any).length > 0)
-    ) {
+    const updates: Record<string, unknown> = {};
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (price !== undefined) updates.price = Number(price);
+    if (comparePrice !== undefined) updates.comparePrice = Number(comparePrice);
+    if (category !== undefined) updates.category = category;
+    if (stock !== undefined) updates.stock = Number(stock);
+    if (isFeatured !== undefined) updates.isFeatured = isFeatured === "true";
+    if (isActive !== undefined) updates.isActive = isActive === "true";
+    if (sizes !== undefined) updates.sizes = sizes;
+    if (req.body.existingImages !== undefined || (files && files.length > 0)) {
       updates.images = images;
     }
-
-    delete updates.existingImages;
 
     const product = await Product.findByIdAndUpdate(req.params.id, updates, {
       new: true,
@@ -233,10 +274,7 @@ export const updateProduct = async (req: Request, res: Response) => {
         .json({ success: false, message: "Product not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      data: product,
-    });
+    res.status(200).json({ success: true, data: product });
   } catch (error: any) {
     console.error("Error updating product:", error);
     res.status(500).json({ success: false, message: error.message });

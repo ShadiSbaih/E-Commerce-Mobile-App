@@ -7,29 +7,18 @@ import Header from "@/components/Header";
 import { COLORS } from "@/constants";
 import type { Order, Product } from "@/constants/types";
 import api from "@/constants/api";
-import { useAuth } from "@clerk/expo";
 import Toast from "react-native-toast-message";
-// import { dummyOrders } from "@/assets/assets";
 
 export default function OrderDetails() {
     const { id } = useLocalSearchParams();
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
-    const { getToken } = useAuth();
 
     const fetchOrderDetails = async () => {
         try {
-            const token = await getToken();
-
-            const { data } = await api.get(`/orders/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (data.success) {
-                setOrder(data.data);
-            }
+            // R9: interceptor attaches token automatically
+            const { data } = await api.get(`/orders/${id}`);
+            if (data.success) setOrder(data.data);
         } catch (error) {
             console.error("Error fetching order details:", error);
             Toast.show({

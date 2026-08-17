@@ -185,7 +185,7 @@ export default function ProductDetails() {
                 >
                     <Ionicons name="cart-outline" size={24} />
                     <View className='absolute z-10 flex-row justify-center bg-black rounded-full top-2 right-4 size-4'>
-                        <Text className='font-font text-white text-[9px]'>{itemCount}</Text>
+                        <Text className='font-bold text-white text-[9px]'>{itemCount}</Text>
                     </View>
 
                 </TouchableOpacity>

@@ -26,7 +26,7 @@ export const getCategories = async (req: Request, res: Response) => {
  */
 export const getCategory = async (req: Request, res: Response) => {
   try {
-    const { identifier } = req.params;
+    const identifier = String(req.params.identifier ?? "");
     let category = null;
 
     if (identifier.match(/^[0-9a-fA-F]{24}$/)) {

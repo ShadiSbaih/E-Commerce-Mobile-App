@@ -1,7 +1,7 @@
 import api from "@/constants/api";
 import { Product, WishlistContextType } from "@/constants/types";
 import { useAuth } from "@clerk/expo";
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useCallback, useState } from "react";
 import Toast from "react-native-toast-message";
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
@@ -9,29 +9,22 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
     const [wishlist, setWishlist] = useState<Product[]>([]);
     const [loading, setLoading] = useState(false);
-    const { getToken, isSignedIn } = useAuth();
+    // R9: only isSignedIn needed — no manual token fetching
+    const { isSignedIn } = useAuth();
 
-    const fetchWishlist = async () => {
-        if (!isSignedIn) {
-            setWishlist([]);
-            return;
-        }
+    const fetchWishlist = useCallback(async () => {
+        if (!isSignedIn) { setWishlist([]); return; }
         setLoading(true);
         try {
-            const token = await getToken();
-            if (!token) return;
-            const { data } = await api.get("/wishlist", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (data.success) {
-                setWishlist(data.data);
-            }
+            // R9: interceptor attaches Bearer token automatically
+            const { data } = await api.get("/wishlist");
+            if (data.success) setWishlist(data.data);
         } catch (error) {
             console.error("Error fetching wishlist:", error);
         } finally {
             setLoading(false);
         }
-    };
+    }, [isSignedIn]);
 
     const toggleWishlist = async (product: Product) => {
         if (!isSignedIn) {
@@ -43,24 +36,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
             return;
         }
 
-        // 1. Snapshot previous state
+        // Optimistic update
         const previousWishlist = [...wishlist];
         const exists = wishlist.some(item => item._id === product._id);
-
-        // 2. Optimistic UI update
-        const updatedWishlist = exists
+        setWishlist(exists
             ? wishlist.filter(item => item._id !== product._id)
-            : [...wishlist, product];
+            : [...wishlist, product],
+        );
 
-        setWishlist(updatedWishlist);
-
-        // 3. API mutation
         try {
-            const token = await getToken();
-            const { data } = await api.post("/wishlist/toggle", { productId: product._id }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
+            // R9: interceptor attaches Bearer token automatically
+            const { data } = await api.post("/wishlist/toggle", { productId: product._id });
             if (data.success) {
                 setWishlist(data.data);
                 Toast.show({
@@ -71,7 +57,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error("Error toggling wishlist:", error);
-            // 4. Rollback on failure
+            // Rollback
             setWishlist(previousWishlist);
             Toast.show({
                 type: "error",
@@ -81,13 +67,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const isInWishlist = (productId: string) => {
-        return wishlist.some(item => item._id === productId);
-    };
+    const isInWishlist = (productId: string) =>
+        wishlist.some(item => item._id === productId);
 
-    useEffect(() => {
-        fetchWishlist();
-    }, [isSignedIn]);
+    useEffect(() => { fetchWishlist(); }, [fetchWishlist]);
 
     return (
         <WishlistContext.Provider value={{ wishlist, loading, toggleWishlist, isInWishlist }}>
@@ -98,8 +81,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
 export function useWishlist() {
     const context = React.useContext(WishlistContext);
-    if (context === undefined || !context) {
-        throw new Error("useWishlist must be used within a WishlistProvider");
-    }
+    if (!context) throw new Error("useWishlist must be used within a WishlistProvider");
     return context;
 }

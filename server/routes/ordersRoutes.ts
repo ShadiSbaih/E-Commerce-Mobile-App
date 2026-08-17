@@ -4,25 +4,48 @@ import {
   getAllOrders,
   getOrderById,
   getOrders,
+  previewOrder,
   updateOrderStatus,
 } from "../controllers/OrdersController.js";
 import { authorize, protect } from "../middleware/auth.js";
+import {
+  objectIdParam,
+  validateBody,
+  validateQuery,
+  createOrderSchema,
+  updateOrderStatusSchema,
+} from "../middleware/validate.js";
+import { z } from "zod";
 
 const OrderRouter = express.Router();
 
-//Get user orders
-OrderRouter.get("/", protect, getOrders);
+OrderRouter.use(protect);
 
-//get all orders (admin only)
-OrderRouter.get("/admin/all", protect, authorize("admin"), getAllOrders);
-
-//Get order details
-OrderRouter.get("/:id", protect, getOrderById);
-
-//Create new order from cart
-OrderRouter.post("/", protect, createOrder);
-
-// update order status (admin only)
-OrderRouter.put("/:id/status", protect, authorize("admin"), updateOrderStatus);
+// R8: Returns the real price breakdown before the user confirms checkout
+OrderRouter.get("/preview", previewOrder);
+OrderRouter.get("/", getOrders);
+OrderRouter.get(
+  "/admin/all",
+  authorize("admin"),
+  validateQuery(
+    z.object({
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      status: z
+        .enum(["placed", "processing", "shipped", "delivered", "cancelled"])
+        .optional(),
+    }),
+  ),
+  getAllOrders,
+);
+OrderRouter.get("/:id", objectIdParam("id"), getOrderById);
+OrderRouter.post("/", validateBody(createOrderSchema), createOrder);
+OrderRouter.put(
+  "/:id/status",
+  objectIdParam("id"),
+  authorize("admin"),
+  validateBody(updateOrderStatusSchema),
+  updateOrderStatus,
+);
 
 export default OrderRouter;

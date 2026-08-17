@@ -1,38 +1,39 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View, ActivityIndicator, RefreshControl, Alert } from "react-native";
+import { ScrollView, Text, View, ActivityIndicator, RefreshControl } from "react-native";
 import { COLORS, getStatusColor } from "@/constants";
-// import { dummyAdminStats } from "@/assets/assets";
 import { useAuth } from "@clerk/expo";
 import api from "@/constants/api";
 import Toast from "react-native-toast-message";
 
+type DashboardStats = {
+    totalUsers: number;
+    totalProducts: number;
+    totalOrders: number;
+    totalRevenue: number;
+    recentOrders: any[];
+};
+
 export default function AdminDashboard() {
-    const { getToken } = useAuth();
+    // R9: only isSignedIn needed — interceptor handles token
+    const { } = useAuth();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [stats, setStats] = useState({
+    const [stats, setStats] = useState<DashboardStats>({
         totalUsers: 0,
         totalProducts: 0,
         totalOrders: 0,
         totalRevenue: 0,
-        recentOrders: []
+        recentOrders: [],
     });
 
     const fetchStats = async () => {
         try {
-            const token = await getToken();
-            const { data } = await api.get("/admin/stats", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (data.success) {
-                setStats(data.data);
-            }
-        }
-        catch (err) {
+            // R9: interceptor attaches token automatically
+            const { data } = await api.get("/admin/stats");
+            if (data.success) setStats(data.data);
+        } catch (err) {
             console.error("Error fetching admin stats:", err);
             Toast.show({
                 type: "error",

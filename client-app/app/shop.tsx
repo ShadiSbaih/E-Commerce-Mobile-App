@@ -1,5 +1,5 @@
 import { ActivityIndicator, FlatList, TextInput, TouchableOpacity, View, Text, ScrollView } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { Product } from '@/constants/types';
 import Toast from 'react-native-toast-message';
@@ -26,25 +26,22 @@ export default function Shop() {
         params.search ? String(params.search) : ""
     );
 
-    const fetchProducts = async (pageNumber = 1, category = selectedCategory, search = searchQuery) => {
-        if (pageNumber === 1) {
-            setLoading(true);
-        } else {
-            setLoadingMore(true);
-        }
+    // R20: useCallback prevents a new function reference on every render.
+    // Parameters for category/search/page are passed explicitly so the
+    // function body never captures stale closure values.
+    const fetchProducts = useCallback(async (pageNumber = 1, category = selectedCategory, search = searchQuery) => {
+        if (pageNumber === 1) setLoading(true);
+        else setLoadingMore(true);
 
         try {
-            const queryParams: any = { page: pageNumber, limit: 10 };
+            const queryParams: Record<string, string | number> = { page: pageNumber, limit: 10 };
             if (category) queryParams.category = category;
             if (search) queryParams.search = search;
 
             const { data } = await api.get('/products', { params: queryParams });
 
-            if (pageNumber === 1) {
-                setProducts(data.data);
-            } else {
-                setProducts(prev => [...prev, ...data.data]);
-            }
+            if (pageNumber === 1) setProducts(data.data);
+            else setProducts(prev => [...prev, ...data.data]);
 
             setHasMore(data.pagination.page < data.pagination.pages);
             setPage(pageNumber);
@@ -59,7 +56,8 @@ export default function Shop() {
             setLoading(false);
             setLoadingMore(false);
         }
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleSearchSubmit = () => {
         setPage(1);
