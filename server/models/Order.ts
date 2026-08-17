@@ -58,6 +58,11 @@ const orderSchema = new mongoose.Schema<IOrder>(
   { timestamps: true },
 );
 
+// R18: Compound indexes for the two most common query patterns:
+// 1. user orders list — sorted by most recent
+// 2. admin orders filter — by status + recency
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ orderStatus: 1, createdAt: -1 });
 
 const Order = mongoose.model<IOrder>("Order", orderSchema);
 

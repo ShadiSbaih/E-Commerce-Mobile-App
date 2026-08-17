@@ -1,38 +1,39 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View, ActivityIndicator, RefreshControl, Alert } from "react-native";
+import { ScrollView, Text, View, ActivityIndicator, RefreshControl } from "react-native";
 import { COLORS, getStatusColor } from "@/constants";
-// import { dummyAdminStats } from "@/assets/assets";
 import { useAuth } from "@clerk/expo";
 import api from "@/constants/api";
 import Toast from "react-native-toast-message";
 
+type DashboardStats = {
+    totalUsers: number;
+    totalProducts: number;
+    totalOrders: number;
+    totalRevenue: number;
+    recentOrders: any[];
+};
+
 export default function AdminDashboard() {
-    const { getToken } = useAuth();
+    // R9: only isSignedIn needed — interceptor handles token
+    const { } = useAuth();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [stats, setStats] = useState({
+    const [stats, setStats] = useState<DashboardStats>({
         totalUsers: 0,
         totalProducts: 0,
         totalOrders: 0,
         totalRevenue: 0,
-        recentOrders: []
+        recentOrders: [],
     });
 
     const fetchStats = async () => {
         try {
-            const token = await getToken();
-            const { data } = await api.get("/admin/stats", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (data.success) {
-                setStats(data.data);
-            }
-        }
-        catch (err) {
+            // R9: interceptor attaches token automatically
+            const { data } = await api.get("/admin/stats");
+            if (data.success) setStats(data.data);
+        } catch (err) {
             console.error("Error fetching admin stats:", err);
             Toast.show({
                 type: "error",
@@ -82,12 +83,12 @@ export default function AdminDashboard() {
             <View className="mb-6">
                 <Text className="mb-4 text-2xl font-bold tracking-tight text-primary">Recent Orders</Text>
                 {stats.recentOrders.length === 0 ? (
-                    <View className="items-center p-6 bg-white border border-gray-100 rounded-2xl">
+                    <View className="items-center p-6 bg-white border border-border rounded-2xl">
                         <Text className="text-secondary">No recent orders</Text>
                     </View>
                 ) : (
                     stats.recentOrders.map((order: any) => (
-                        <View key={order._id} className="p-5 mb-3 bg-white border border-gray-100 rounded-2xl">
+                        <View key={order._id} className="p-5 mb-3 bg-white border border-border rounded-2xl">
                             <View className="flex-row items-center justify-between mb-3">
                                 <View>
                                     <Text className="text-base font-bold text-primary">Total Products : {order.items.reduce((acc: number, item: any) => acc + item.quantity, 0)}</Text>
@@ -103,11 +104,11 @@ export default function AdminDashboard() {
                                 ))}
                             </View>
 
-                            <View className="h-[1px] bg-gray-100 mb-3" />
+                            <View className="h-[1px] bg-surface-muted mb-3" />
 
                             <View className="flex-row items-center justify-between">
                                 <View className="flex-row items-center">
-                                    <View className="items-center justify-center w-8 h-8 mr-2 bg-gray-100 rounded-full">
+                                    <View className="items-center justify-center w-8 h-8 mr-2 bg-surface-muted rounded-full">
                                         <Text className="text-xs font-bold text-primary">
                                             {(order.user?.name || '?').charAt(0).toUpperCase()}
                                         </Text>
@@ -125,7 +126,7 @@ export default function AdminDashboard() {
 }
 
 const StatCard = ({ label, value }: { label: string, value: string }) => (
-    <View className="bg-white p-5 rounded-2xl border border-gray-100 w-[48%] mb-4 justify-center">
+    <View className="bg-white p-5 rounded-2xl border border-border w-[48%] mb-4 justify-center">
         <Text className="mb-1 text-xl font-bold text-primary">{value}</Text>
         <Text className="text-xs font-medium tracking-wide uppercase text-secondary">{label}</Text>
     </View>

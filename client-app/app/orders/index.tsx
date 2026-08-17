@@ -14,11 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { COLORS, getStatusColor } from "@/constants";
 import type { Order } from "@/constants/types";
-import {
-    // dummyOrders,
-    formatDate,
-} from "@/assets/assets";
-import { useAuth } from "@clerk/expo";
+import { formatDate } from "@/assets/assets";
 import api from "@/constants/api";
 import Toast from "react-native-toast-message";
 
@@ -26,22 +22,28 @@ export default function Orders() {
     const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
-    const { getToken } = useAuth();
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
 
-    const fetchOrders = async () => {
+    // R17: Fetch one page of orders at a time (20 per page)
+    const fetchOrders = async (pageNumber = 1) => {
+        if (pageNumber === 1) setLoading(true);
+        else setLoadingMore(true);
         try {
-            const token = await getToken();
-
             const { data } = await api.get("/orders", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                params: { page: pageNumber, limit: 20 },
             });
-
             if (data.success) {
-                setOrders(data.data);
+                if (pageNumber === 1) setOrders(data.data);
+                else setOrders(prev => [...prev, ...data.data]);
+                setHasMore(
+                    data.pagination
+                        ? data.pagination.page < data.pagination.pages
+                        : false,
+                );
+                setPage(pageNumber);
             }
-
         } catch (error) {
             console.error("Error fetching orders:", error);
             Toast.show({
@@ -51,12 +53,11 @@ export default function Orders() {
             });
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     };
 
-    useEffect(() => {
-        fetchOrders();
-    }, []);
+    useEffect(() => { fetchOrders(); }, []);
 
     return (
         <SafeAreaView className="flex-1 bg-surface" edges={["top"]}>
@@ -75,9 +76,16 @@ export default function Orders() {
                     data={orders}
                     keyExtractor={(item) => item._id}
                     contentContainerStyle={{ padding: 16 }}
+                    onEndReached={() => {
+                        if (!loadingMore && !loading && hasMore) fetchOrders(page + 1);
+                    }}
+                    onEndReachedThreshold={0.4}
+                    ListFooterComponent={loadingMore ? (
+                        <ActivityIndicator size="small" color={COLORS.primary} style={{ marginVertical: 12 }} />
+                    ) : null}
                     renderItem={({ item, index }) => (
                         <TouchableOpacity
-                            className="p-4 mb-4 bg-white border border-gray-100 shadow-sm rounded-xl"
+                            className="p-4 mb-4 bg-white border border-border rounded-xl"
                             onPress={() => router.push(`/orders/${item._id}`)}
                         >
                             <View className="flex-row justify-between mb-2">
@@ -102,13 +110,13 @@ export default function Orders() {
                                 <View
                                     className={`px-2 py-1 rounded-full ${item.paymentStatus === "paid"
                                         ? "bg-green-100"
-                                        : "bg-gray-100"
+                                        : "bg-surface-muted"
                                         }`}
                                 >
                                     <Text
                                         className={`text-xs font-bold capitalize ${item.paymentStatus === "paid"
                                             ? "text-green-700"
-                                            : "text-gray-700"
+                                            : "text-secondary"
                                             }`}
                                     >
                                         {item.paymentStatus}
@@ -136,7 +144,7 @@ export default function Orders() {
                                     return (
                                         <View
                                             key={idx}
-                                            className="p-1 mr-3 border border-gray-100 rounded-md bg-gray-50"
+                                            className="p-1 mr-3 border border-border rounded-md bg-surface"
                                         >
                                             {image ? (
                                                 <Image
@@ -145,7 +153,7 @@ export default function Orders() {
                                                     resizeMode="cover"
                                                 />
                                             ) : (
-                                                <View className="items-center justify-center w-12 h-12 bg-gray-200 rounded-md">
+                                                <View className="items-center justify-center w-12 h-12 bg-surface-muted rounded-md">
                                                     <Ionicons
                                                         name="image-outline"
                                                         size={20}
@@ -158,7 +166,7 @@ export default function Orders() {
                                 })}
                             </ScrollView>
 
-                            <View className="flex-row items-center justify-between pt-3 mt-2 border-t border-gray-100">
+                            <View className="flex-row items-center justify-between pt-3 mt-2 border-t border-border">
                                 <Text className="text-secondary">
                                     Items: {item.items.length}
                                 </Text>

@@ -173,7 +173,7 @@ export default function EditProduct() {
 
     return (
         <ScrollView className="flex-1 p-4 bg-surface">
-            <View className="p-4 mb-20 bg-white border border-gray-100 rounded-xl">
+            <View className="p-4 mb-20 bg-white border border-border rounded-xl">
                 <Text className="mb-1 text-xs font-bold uppercase text-secondary">Product Name *</Text>
                 <TextInput
                     className="p-3 mb-4 rounded-lg bg-surface text-primary"
@@ -272,7 +272,7 @@ export default function EditProduct() {
                         {(existingImages.length + newImages.length) < 5 && (
                             <TouchableOpacity
                                 onPress={pickImages}
-                                className="items-center justify-center w-24 h-24 bg-gray-100 border border-gray-300 border-dashed rounded-lg"
+                                className="items-center justify-center w-24 h-24 bg-surface-muted border border-border border-dashed rounded-lg"
                             >
                                 <Ionicons name="add" size={24} color={COLORS.secondary} />
                                 <Text className="mt-1 text-xs text-secondary">Add</Text>

@@ -47,11 +47,47 @@ A full-stack, feature-rich mobile e-commerce application built with **React Nati
 
 ## 📸 Screenshots
 
-*(Replace these placeholders with actual screenshots of your app)*
+### Customer View
 
-| Home Screen | Product Details | Cart & Checkout | User Profile |
+The screenshots below represent the normal customer experience. This is separate from the admin dashboard and covers the complete shopping journey in the mobile app.
+
+| Home | Favorites | Cart | Profile |
 | :---: | :---: | :---: | :---: |
-| <img src="https://via.placeholder.com/250x500.png?text=Home" width="200" /> | <img src="https://via.placeholder.com/250x500.png?text=Details" width="200" /> | <img src="https://via.placeholder.com/250x500.png?text=Cart" width="200" /> | <img src="https://via.placeholder.com/250x500.png?text=Profile" width="200" /> |
+| <img src="docs/screenshots/customer/home.png" width="180" alt="Customer home screen" /> | <img src="docs/screenshots/customer/favorites.png" width="180" alt="Customer favorites screen" /> | <img src="docs/screenshots/customer/cart.png" width="180" alt="Customer cart screen" /> | <img src="docs/screenshots/customer/profile.png" width="180" alt="Customer profile screen" /> |
+
+| Product Details | My Orders | Shipping Addresses |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/customer/product-details.png" width="180" alt="Product details screen" /> | <img src="docs/screenshots/customer/orders.png" width="180" alt="My orders screen" /> | <img src="docs/screenshots/customer/shipping-addresses.png" width="180" alt="Shipping addresses screen" /> |
+
+### Customer screens
+
+- **Home:** Promotional carousel, category browsing, and thoughtfully chosen product recommendations.
+- **Favorites:** Products saved to the customer's wishlist, with quick access to product details.
+- **Cart:** Cart items, quantity controls, subtotal, shipping, total, and checkout action.
+- **Profile:** Customer account information and links to orders, shipping addresses, reviews, and settings.
+- **Product details:** Product imagery, maker information, price, size selection, shipping status, and add-to-cart action.
+- **My Orders:** Previous orders with order number, date, payment method, status, items, and totals.
+- **Shipping Addresses:** Saved addresses, default address status, editing, deletion, and adding a new address.
+
+### Customer flow
+
+```text
+Home -> Browse/Search -> Product Details -> Add to Cart -> Checkout -> My Orders
+  |                                                        |
+  +-> Favorites ------------------------------------------+
+  |
+  +-> Profile -> Shipping Addresses / Reviews / Settings
+```
+
+> The **Admin Dashboard** is an internal management interface and is not part of the normal customer view. It is used separately for managing products and orders.
+
+## Admin Dashboard
+
+The admin interface is a separate role-based area for store management. It includes an overview dashboard, product management, product creation, and order management.
+
+| Dashboard | Products | Add Product | Orders |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/admin/dashboard.png" width="200" alt="Admin dashboard" /> | <img src="docs/screenshots/admin/products.png" width="200" alt="Admin products screen" /> | <img src="docs/screenshots/admin/add-product.png" width="200" alt="Admin add product screen" /> | <img src="docs/screenshots/admin/orders.png" width="200" alt="Admin orders screen" /> |
 
 ---
 

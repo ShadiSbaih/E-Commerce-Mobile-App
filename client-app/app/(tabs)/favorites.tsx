@@ -1,10 +1,11 @@
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
+import { View, ScrollView } from 'react-native'
 import React from 'react'
 import { useRouter } from 'expo-router';
 import { useWishlist } from '@/Context/WishlistContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
+import EmptyState from '@/components/EmptyState';
 
 export default function Favorites() {
   const router = useRouter();
@@ -32,12 +33,7 @@ export default function Favorites() {
 
           </ScrollView>
         ) : (
-              <View className="items-center justify-center flex-1">
-                 <Text className="text-lg text-secondary">Your wishlist is empty</Text>
-                 <TouchableOpacity onPress={() => router.push('/')} className="px-4 py-2 mt-10 rounded-full bg-primary">
-                   <Text className="text-xl font-bold text-white">Start Shopping</Text>
-                 </TouchableOpacity>
-               </View>
+              <EmptyState title="Your favorites are waiting." description="Save products you love and they’ll appear here." actionLabel="Explore products" onAction={() => router.push('/')} icon="heart-outline" />
         )
       }
 

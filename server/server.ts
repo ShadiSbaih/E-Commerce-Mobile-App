@@ -7,6 +7,7 @@ import express, {
 import cors from "cors";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
+import type { Server as HttpServer } from "http";
 import { connectDB, closeDB } from "./config/db.js";
 import { clerkMiddleware } from "@clerk/express";
 import { clerkWebhook } from "./controllers/webhook.js";
@@ -16,7 +17,10 @@ import CartRouter from "./routes/cartRoutes.js";
 import OrderRouter from "./routes/ordersRoutes.js";
 import AddressRouter from "./routes/addressRoutes.js";
 import AdminRouter from "./routes/adminRoutes.js";
+import WishlistRouter from "./routes/wishlistRoutes.js";
+import CategoryRouter from "./routes/categoryRoutes.js";
 import { seedProducts } from "./scripts/seedProducts.js";
+import { seedCategories } from "./scripts/seedCategories.js";
 
 // Validate Crucial Environment Variables Immediately
 const requiredEnv = ["MONGO_URI","ADMIN_EMAIL","CLERK_PUBLISHABLE_KEY","CLERK_SECRET_KEY","CLERK_WEBHOOK_SIGNING_SECRET","CLOUDINARY_CLOUD_NAME","CLOUDINARY_API_KEY","CLOUDINARY_API_SECRET"];
@@ -30,9 +34,17 @@ for (const env of requiredEnv) {
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Global Security Middlewares
+// R19: Parse ALLOWED_ORIGINS as a comma-separated list so multiple
+// origins (e.g. "https://app.example.com,https://admin.example.com")
+// are correctly passed to cors() as an array, not a single string.
+const rawOrigins = process.env.ALLOWED_ORIGINS;
+const corsOrigin: string | string[] | boolean =
+  rawOrigins
+    ? rawOrigins.split(",").map((o) => o.trim())
+    : "*";
+
 app.use(helmet());
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS || "*" }));
+app.use(cors({ origin: corsOrigin }));
 
 // Rate limiter
 const limiter = rateLimit({
@@ -63,6 +75,8 @@ app.use("/api/cart", CartRouter);
 app.use("/api/orders", OrderRouter);
 app.use("/api/addresses", AddressRouter);
 app.use("/api/admin", AdminRouter);
+app.use("/api/wishlist", WishlistRouter);
+app.use("/api/categories", CategoryRouter);
 
 // Centralized Error Handling Middleware
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
@@ -76,7 +90,8 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-let server: any;
+// R12: Typed as HttpServer instead of any
+let server: HttpServer | undefined;
 
 async function startServer() {
   try {
@@ -90,6 +105,7 @@ async function startServer() {
     Promise.all([
       makeAdmin(),
       seedProducts(process.env.MONGO_URI as string),
+      seedCategories(),
     ]).catch((err) =>
       console.error("⚠️ Background task failure during startup:", err),
     );

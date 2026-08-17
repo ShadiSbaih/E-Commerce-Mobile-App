@@ -57,7 +57,7 @@ export default function Profile() {
               <View className="mb-3">
                 <Image
                   source={{ uri: user.imageUrl }}
-                  className="border-2 border-white rounded-full shadow-sm size-20"
+                  className="border-2 border-white rounded-full size-20"
                 />
               </View>
 
@@ -72,20 +72,20 @@ export default function Profile() {
               {/* admin panel button if user is admin */}
               {user.publicMetadata?.role === 'admin' && (
                 <TouchableOpacity
-                  className="px-4 py-2 mt-4 bg-blue-500 rounded-full"
+                  className="px-4 py-2 mt-4 bg-nimbus-blue rounded-xl"
                   onPress={() => router.push('/admin')}
                 >
-                  <Text className="font-bold text-white">Admin Panel</Text>
+                  <Text className="font-bold text-primary">Admin Panel</Text>
                 </TouchableOpacity>
               )}
             </View>
 
-            <View className="p-2 mb-4 bg-white border border-gray-200 rounded-xl">
+            <View className="p-2 mb-4 bg-white border border-border rounded-xl">
               {PROFILE_MENU.map((item, index) => (
                 <TouchableOpacity
                   key={item.id}
                   className={`flex-row items-center justify-between p-4 ${index !== PROFILE_MENU.length - 1
-                    ? 'border-b border-gray-200'
+                    ? 'border-b border-border'
                     : ''
                     }`}
                   onPress={() => router.push(item.route as any)}
@@ -129,11 +129,11 @@ export default function Profile() {
               />
             </View>
 
-            <Text className="mb-4 text-lg font-medium text-gray-700">
+            <Text className="mb-4 text-lg font-medium text-secondary">
               Welcome, Guest!
             </Text>
 
-            <Text className="mb-6 text-center text-gray-500">
+            <Text className="mb-6 text-center text-muted">
               Please log in to access your profile and personalized features.
             </Text>
 

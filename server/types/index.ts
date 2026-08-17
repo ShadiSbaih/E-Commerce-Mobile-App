@@ -1,5 +1,16 @@
 import { Document, Types } from "mongoose";
 
+export interface ICategory extends Document {
+    name: string;
+    slug: string;
+    icon?: string;
+    image?: string;
+    displayOrder?: number;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 export interface IAddress extends Document {
     user: Types.ObjectId;
     type: "Home" | "Work" | "Other";

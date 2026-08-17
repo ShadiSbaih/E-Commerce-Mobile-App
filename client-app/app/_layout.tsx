@@ -2,14 +2,18 @@ import React, { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 
 import { CartProvider } from "@/Context/CartContext";
 import { WishlistProvider } from "@/Context/WishlistContext";
 import { setAuthHandlers } from "@/constants/api";
+import BrandLoader from "@/components/BrandLoader";
 
 import "../global.css";
+import { colors } from '@/theme';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
@@ -42,22 +46,17 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       segment === "sign-up";
 
     if (!isSignedIn && !isAuthRoute) {
-      router.replace("/sign-in");
+      setTimeout(() => { router.replace("/sign-in"); }, 0);
     }
 
     if (isSignedIn && isAuthRoute) {
-      router.replace("/");
+      setTimeout(() => { router.replace("/"); }, 0);
     }
   }, [isLoaded, isSignedIn, segments, router]);
 
-  if (!isLoaded) return null;
+  if (!isLoaded) return <BrandLoader label="Loading Nimbus" />;
 
-  return (
-    <>
-      <Stack screenOptions={{ headerShown: false }} />
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }
 
 /**
@@ -66,6 +65,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
       <ClerkProvider
         publishableKey={publishableKey!}
         tokenCache={tokenCache}
@@ -73,12 +73,14 @@ export default function RootLayout() {
         <CartProvider>
           <WishlistProvider>
             <AuthGate>
+              <StatusBar style="dark" backgroundColor={colors.background} />
               <Stack screenOptions={{ headerShown: false }} />
               <Toast />
             </AuthGate>
           </WishlistProvider>
         </CartProvider>
       </ClerkProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

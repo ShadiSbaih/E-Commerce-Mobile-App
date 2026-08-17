@@ -1,24 +1,28 @@
 import {
   createProduct,
   deleteProduct,
+  getCategories,
   getProduct,
   getProducts,
   updateProduct,
 } from "../controllers/ProductController.js";
 import { authorize, protect } from "../middleware/auth.js";
 import upload from "../middleware/upload.js";
-import  express  from 'express';
-
+import {
+  objectIdParam,
+  validateQuery,
+  productsQuerySchema,
+} from "../middleware/validate.js";
+import express from "express";
 
 const ProductRouter = express.Router();
 
-//get all products
-ProductRouter.get("/", getProducts);
+// Public routes
+ProductRouter.get("/", validateQuery(productsQuerySchema), getProducts);
+ProductRouter.get("/categories", getCategories);
+ProductRouter.get("/:id", objectIdParam("id"), getProduct);
 
-//get single product
-ProductRouter.get("/:id", getProduct);
-
-//create product (Admin only)
+// Admin-only mutation routes
 ProductRouter.post(
   "/",
   protect,
@@ -26,23 +30,20 @@ ProductRouter.post(
   upload.array("images", 5),
   createProduct,
 );
-
-//update product (Admin only)
 ProductRouter.put(
   "/:id",
+  objectIdParam("id"),
   protect,
   authorize("admin"),
   upload.array("images", 5),
   updateProduct,
 );
-
-//delete product (Admin only)
 ProductRouter.delete(
   "/:id",
+  objectIdParam("id"),
   protect,
   authorize("admin"),
   deleteProduct,
 );
-
 
 export default ProductRouter;
