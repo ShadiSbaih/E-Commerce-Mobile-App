@@ -952,7 +952,34 @@ export const seedProducts = async (uri: string) => {
         if (products.length === 0) {
             await Product.insertMany(PRODUCTS);
         } else {
-            console.log("Products already exist");
+            // Repair databases that were already changed by the temporary
+            // fallback-image seed, while leaving normal/admin-edited records alone.
+            const productsWithFallbackImages = await Product.find({
+                "images.0": { $regex: "images.unsplash.com" },
+            }).select("_id");
+
+            if (productsWithFallbackImages.length > 0) {
+                const originalImages = new Map(
+                    PRODUCTS.map((product) => [product._id, product.images]),
+                );
+
+                await Product.bulkWrite(
+                    productsWithFallbackImages.flatMap((product) => {
+                        const images = originalImages.get(product._id.toString());
+                        return images
+                            ? [{
+                                updateOne: {
+                                    filter: { _id: product._id },
+                                    update: { $set: { images } },
+                                },
+                            }]
+                            : [];
+                    }),
+                );
+                console.log(`✅ Restored ${productsWithFallbackImages.length} products to the original image data.`);
+            } else {
+                console.log("Products already exist");
+            }
         }
     } catch (error) {
         console.error("Seeding Error:", error);
