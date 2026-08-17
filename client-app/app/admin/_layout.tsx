@@ -14,7 +14,7 @@ export default function AdminLayout() {
         if (isLoaded && (!user || user.publicMetadata?.role !== "admin")) {
             router.replace("/(tabs)");
         }
-    }, [isLoaded, user]);
+    }, [isLoaded, router, user]);
 
     if (!isLoaded) {
         return (

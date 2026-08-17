@@ -51,15 +51,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             if (data.success && data.data) {
                 const serverCart = data.data;
                 const mappedItems: CartItem[] = serverCart.items.map((item: any) => ({
-                    id: item.product._id,
+                    id: `${item.product._id}-${item?.size ?? "M"}`,
                     productId: item.product._id,
-                    quantity: item.quantity,
+                    quantity: Number(item.quantity),
                     product: item.product,
                     size: item?.size ?? "M",
-                    price: item.price,
+                    price: Number(item.price),
                 }));
                 setCartItems(mappedItems);
-                setCartTotal(serverCart.totalAmount);
+                const serverTotal = Number(serverCart.totalAmount);
+                setCartTotal(Number.isFinite(serverTotal) ? serverTotal : calculateLocalTotal(mappedItems));
             }
         } catch (error: any) {
             if (error.response?.status !== 401) {
@@ -213,7 +214,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             setCartItems([]);
             setCartTotal(0);
         }
-    }, [isSignedIn]);
+    }, [fetchCartItems, isSignedIn]);
 
     return (
         <CartContext.Provider
