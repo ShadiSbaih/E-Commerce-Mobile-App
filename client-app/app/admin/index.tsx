@@ -1,8 +1,6 @@
-import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View, ActivityIndicator, RefreshControl } from "react-native";
 import { COLORS, getStatusColor } from "@/constants";
-import { useAuth } from "@clerk/expo";
 import api from "@/constants/api";
 import Toast from "react-native-toast-message";
 
@@ -16,8 +14,6 @@ type DashboardStats = {
 
 export default function AdminDashboard() {
     // R9: only isSignedIn needed — interceptor handles token
-    const { } = useAuth();
-    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [stats, setStats] = useState<DashboardStats>({

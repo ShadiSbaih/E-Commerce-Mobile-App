@@ -8,6 +8,7 @@ import type { Address } from "@/constants/types";
 import api from "@/constants/api";
 import Toast from "react-native-toast-message";
 import EmptyState from '@/components/EmptyState';
+import axios from 'axios';
 
 export default function Addresses() {
     const [addresses, setAddresses] = useState<Address[]>([]);
@@ -76,7 +77,10 @@ export default function Addresses() {
             resetForm();
         } catch (error) {
             console.error("Error saving address:", error);
-            Toast.show({ type: "error", text1: "Error", text2: "Failed to save address" });
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.message || error.message
+                : "Failed to save address";
+            Toast.show({ type: "error", text1: "Could not save address", text2: message });
         } finally {
             setSubmitting(false);
             fetchAddresses();

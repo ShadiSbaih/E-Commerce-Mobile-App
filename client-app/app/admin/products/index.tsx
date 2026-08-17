@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View, ActivityIndicator, RefreshControl, Image, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants";
@@ -15,7 +15,7 @@ export default function AdminProducts() {
     const [refreshing, setRefreshing] = useState(false);
     const [products, setProducts] = useState([]);
 
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         try {
             const token = await getToken();
             const { data } = await api.get("/products",
@@ -39,11 +39,11 @@ export default function AdminProducts() {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, [getToken]);
 
     useEffect(() => {
         fetchProducts();
-    }, []);
+    }, [fetchProducts]);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -66,7 +66,7 @@ export default function AdminProducts() {
                 });
                 fetchProducts();
             }
-        } catch (error) {
+        } catch {
             Toast.show({
                 type: "error",
                 text1: "Error",

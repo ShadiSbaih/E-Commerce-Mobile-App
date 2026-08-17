@@ -74,9 +74,16 @@ export const createOrder = async (req: Request, res: Response) => {
   // If any item is out of stock or any write fails the whole transaction
   // is rolled back, preventing negative-stock race conditions.
   const session = await mongoose.startSession();
-  session.startTransaction();
+  let transactionStarted = false;
 
   try {
+    // Keep transaction setup inside the guarded block. MongoDB standalone
+    // deployments throw here because transactions require a replica set or
+    // mongos; letting that exception escape closes the request with no HTTP
+    // response, which appears as Axios "Network Error" on the mobile app.
+    session.startTransaction();
+    transactionStarted = true;
+
     const { shippingAddress, paymentMethod, notes } = req.body as {
       shippingAddress: {
         street: string;
@@ -104,6 +111,7 @@ export const createOrder = async (req: Request, res: Response) => {
 
     if (!cart || cart.items.length === 0) {
       await session.abortTransaction();
+      transactionStarted = false;
       return res.status(400).json({ success: false, message: "Cart is empty" });
     }
 
@@ -126,6 +134,7 @@ export const createOrder = async (req: Request, res: Response) => {
 
       if (!updated) {
         await session.abortTransaction();
+        transactionStarted = false;
         return res.status(400).json({
           success: false,
           message: `Insufficient stock for "${item.product.name}"`,
@@ -177,9 +186,20 @@ export const createOrder = async (req: Request, res: Response) => {
     await session.commitTransaction();
     res.status(201).json({ success: true, data: order });
   } catch (error: any) {
-    await session.abortTransaction();
+    if (transactionStarted) {
+      await session.abortTransaction();
+    }
     console.error("Error creating order:", error);
-    res.status(500).json({ success: false, message: error.message });
+    const transactionError =
+      typeof error?.message === "string" &&
+      /transaction numbers are only allowed|replica set|mongos/i.test(error.message);
+
+    res.status(transactionError ? 503 : 500).json({
+      success: false,
+      message: transactionError
+        ? "Order service requires MongoDB transactions. Configure MongoDB as a replica set or use MongoDB Atlas."
+        : error?.message || "Unable to create order",
+    });
   } finally {
     await session.endSession();
   }

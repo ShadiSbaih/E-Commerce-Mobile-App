@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ScrollView, Text, TextInput, TouchableOpacity, View, Switch, Image, ActivityIndicator, Platform, Modal, FlatList, TouchableWithoutFeedback } from "react-native";
 import Toast from 'react-native-toast-message';
 import { COLORS, CATEGORIES } from "@/constants";
@@ -30,8 +30,7 @@ export default function EditProduct() {
     const [existingImages, setExistingImages] = useState<string[]>([]);
     const [newImages, setNewImages] = useState<string[]>([]);
 
-    useEffect(() => {
-        const fetchProduct = async () => {
+    const fetchProduct = useCallback(async () => {
             try {
                 const { data } = await api.get(`/products/${id}`, {
                     headers: {
@@ -67,10 +66,11 @@ export default function EditProduct() {
             } finally {
                 setLoading(false);
             }
-        };
+    }, [getToken, id, router]);
 
+    useEffect(() => {
         if (id) fetchProduct();
-    }, [id]);
+    }, [fetchProduct, id]);
 
     const pickImages = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({

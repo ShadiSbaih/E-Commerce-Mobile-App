@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Image, ScrollView, Text, View, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/Header";
@@ -14,7 +14,7 @@ export default function OrderDetails() {
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchOrderDetails = async () => {
+    const fetchOrderDetails = useCallback(async () => {
         try {
             // R9: interceptor attaches token automatically
             const { data } = await api.get(`/orders/${id}`);
@@ -29,11 +29,11 @@ export default function OrderDetails() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
 
     useEffect(() => {
         fetchOrderDetails();
-    }, [id]);
+    }, [fetchOrderDetails]);
 
     if (loading) {
         return (
