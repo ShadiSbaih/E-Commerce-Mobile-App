@@ -1,8 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
 import { setLoadingHandlers } from "@/constants/api";
-import BrandLoader from "@/components/BrandLoader";
-import { colors } from "@/theme";
 
 type LoadingContextValue = {
     isLoading: boolean;
@@ -37,16 +34,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
         [requestCount, startLoading, stopLoading],
     );
 
-    return (
-        <LoadingContext.Provider value={value}>
-            {children}
-            {value.isLoading && (
-                <View style={styles.overlay} pointerEvents="none" accessibilityLiveRegion="polite">
-                    <BrandLoader label="Loading" />
-                </View>
-            )}
-        </LoadingContext.Provider>
-    );
+    return <LoadingContext.Provider value={value}>{children}</LoadingContext.Provider>;
 }
 
 export function useLoading() {
@@ -54,13 +42,3 @@ export function useLoading() {
     if (!context) throw new Error("useLoading must be used within LoadingProvider");
     return context;
 }
-
-const styles = StyleSheet.create({
-    overlay: {
-        ...StyleSheet.absoluteFillObject,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: colors.background,
-        zIndex: 1000,
-    },
-});

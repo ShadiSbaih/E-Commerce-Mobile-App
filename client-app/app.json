@@ -4,7 +4,7 @@
     "slug": "nimbus",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/brand/nimbus-mark-transparent.png",
     "scheme": "nimbus",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
