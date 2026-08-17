@@ -79,19 +79,19 @@ export default function AdminOrders() {
                     </View>
                 ) : (
                     orders.map((order: Order) => (
-                        <View key={order._id} className="p-4 mb-4 bg-white border border-gray-100 shadow-sm rounded-xl">
+                        <View key={order._id} className="p-4 mb-4 bg-white border border-border rounded-xl">
                             <View className="flex-row justify-between mb-2">
-                                <Text className="text-sm font-medium text-gray-400">Order #{order.orderNumber}</Text>
+                                <Text className="text-sm font-medium text-disabled">Order #{order.orderNumber}</Text>
                                 <Text className="text-xs text-secondary">{new Date(order.createdAt).toLocaleDateString()}</Text>
                             </View>
 
-                            <View className="p-3 mb-3 rounded-lg bg-gray-50">
+                            <View className="p-3 mb-3 rounded-lg bg-surface">
                                 <Text className="mb-1 text-xs font-bold text-secondary">CUSTOMER</Text>
                                 <Text className="font-medium text-primary">{(order as any).user?.name || 'Unknown User'}</Text>
                                 <Text className="text-xs text-secondary">{(order as any).user?.email || 'No email'}</Text>
                             </View>
 
-                            <View className="p-3 mb-3 rounded-lg bg-gray-50">
+                            <View className="p-3 mb-3 rounded-lg bg-surface">
                                 <Text className="mb-1 text-xs font-bold text-secondary">SHIPPING ADDRESS</Text>
                                 <Text className="text-xs text-primary">{order.shippingAddress?.street}, {order.shippingAddress?.city}</Text>
                                 <Text className="text-xs text-primary">{order.shippingAddress?.state}, {order.shippingAddress?.zipCode}, {order.shippingAddress?.country}</Text>
@@ -103,14 +103,14 @@ export default function AdminOrders() {
                                     <View key={item._id} className="flex-row justify-between mb-1">
                                         <Text className="flex-1 text-xs text-secondary">
                                             {item.quantity}x {item.product?.name || item.name}
-                                            {item.size && <Text className="text-gray-400"> ({item.size})</Text>}
+                                            {item.size && <Text className="text-disabled"> ({item.size})</Text>}
                                         </Text>
                                         <Text className="text-xs font-bold text-secondary">${item.price.toFixed(2)}</Text>
                                     </View>
                                 ))}
                             </View>
 
-                            <View className="flex-row items-center justify-between pt-3 mt-2 border-t border-gray-100">
+                            <View className="flex-row items-center justify-between pt-3 mt-2 border-t border-border">
                                 <Text className="text-lg font-bold text-primary">${order.totalAmount.toFixed(2)}</Text>
                                 <TouchableOpacity
                                     onPress={() => openStatusModal(order)}
@@ -130,7 +130,7 @@ export default function AdminOrders() {
                 <TouchableWithoutFeedback onPress={() => setStatusModalVisible(false)}>
                     <View className="justify-end flex-1 bg-black/50">
                         <View className="bg-white rounded-t-2xl p-4 max-h-[60%]">
-                            <View className="flex-row items-center justify-between pb-4 mb-4 border-b border-gray-100">
+                            <View className="flex-row items-center justify-between pb-4 mb-4 border-b border-border">
                                 <Text className="text-lg font-bold text-primary">Update Order Status</Text>
                                 <TouchableOpacity onPress={() => setStatusModalVisible(false)}>
                                     <Ionicons name="close" size={24} color={COLORS.secondary} />
@@ -148,7 +148,7 @@ export default function AdminOrders() {
                                     keyExtractor={(item) => item}
                                     renderItem={({ item }) => (
                                         <TouchableOpacity
-                                            className={`p-4 rounded-xl mb-2 flex-row justify-between items-center ${selectedOrder?.orderStatus === item ? "bg-primary/10" : "bg-gray-50"}`}
+                                            className={`p-4 rounded-xl mb-2 flex-row justify-between items-center ${selectedOrder?.orderStatus === item ? "bg-primary/10" : "bg-surface"}`}
                                             onPress={() => updateStatus(item)}
                                         >
                                             <Text className={`font-medium capitalize ${selectedOrder?.orderStatus === item ? "text-primary font-bold" : "text-secondary"}`}>

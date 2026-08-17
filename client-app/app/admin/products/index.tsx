@@ -100,11 +100,11 @@ export default function AdminProducts() {
 
     return (
         <View className="flex-1 bg-surface">
-            <View className="flex-row items-center justify-between p-4 bg-white border border-gray-100">
+            <View className="flex-row items-center justify-between p-4 bg-white border border-border">
                 <Text className="text-lg font-semibold text-primary">Total Products ({products.length})</Text>
                 <TouchableOpacity
                     onPress={() => router.push("/admin/products/add")}
-                    className="flex-row items-center px-4 py-2 bg-gray-800 rounded-full"
+                    className="flex-row items-center px-4 py-2 bg-primary rounded-full"
                 >
                     <Ionicons name="add" size={20} color="white" />
                     <Text className="ml-1 font-medium text-white">Add Product</Text>
@@ -121,10 +121,10 @@ export default function AdminProducts() {
                     </View>
                 ) : (
                     products.map((product: any) => (
-                        <View key={product._id} className="flex-row items-center p-3 mb-3 bg-white border border-gray-100 rounded-lg">
+                        <View key={product._id} className="flex-row items-center p-3 mb-3 bg-white border border-border rounded-lg">
                             <Image
                                 source={{ uri: product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/150' }}
-                                className="w-16 h-16 mr-3 bg-gray-100 rounded-lg"
+                                className="w-16 h-16 mr-3 bg-surface-muted rounded-lg"
                                 resizeMode="cover"
                             />
 
@@ -145,7 +145,7 @@ export default function AdminProducts() {
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={() => deleteProduct(product._id)}
-                                    className="p-2 rounded-full bg-gray-50"
+                                    className="p-2 rounded-full bg-surface"
                                 >
                                     <Ionicons name="trash-outline" size={18} color="#333333" />
                                 </TouchableOpacity>

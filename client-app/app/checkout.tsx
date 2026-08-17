@@ -160,7 +160,7 @@ export default function Checkout() {
           </Text>
 
           {selectedAddress ? (
-            <View className="p-4 mb-6 bg-white shadow-sm rounded-xl">
+            <View className="p-4 mb-6 bg-white rounded-xl">
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-base font-bold">
                   {selectedAddress.type}
@@ -180,7 +180,7 @@ export default function Checkout() {
           ) : (
             <TouchableOpacity
               onPress={() => router.push('/addresses')}
-              className="items-center justify-center p-6 mb-6 bg-white border-2 border-gray-300 border-dashed rounded-xl"
+              className="items-center justify-center p-6 mb-6 bg-white border-2 border-border border-dashed rounded-xl"
             >
               <Text className="font-bold text-primary">
                 Add Shipping Address
@@ -196,17 +196,17 @@ export default function Checkout() {
           {/* Cash on Delivery */}
           <TouchableOpacity
             onPress={() => setPaymentMethod('cash')}
-            className={`flex-row items-center bg-white justify-between p-4 mb-4 rounded-2xl border ${paymentMethod === 'cash'
-              ? 'border-black'
-              : 'border-gray-200'
+            className={`flex-row items-center bg-white justify-between p-4 mb-4 rounded-xl border ${paymentMethod === 'cash'
+              ? 'border-primary bg-nimbus-blue'
+              : 'border-border'
               }`}
           >
             <View className="flex-row items-center flex-1">
-              <View className="items-center justify-center w-10 h-10 mr-3 rounded-full bg-[#ECECEC]">
+              <View className="items-center justify-center w-10 h-10 mr-3 rounded-lg bg-surface-muted">
                 <Ionicons
                   name="cash-outline"
                   size={20}
-                  color="#222"
+                  color={COLORS.primary}
                 />
               </View>
 
@@ -223,8 +223,8 @@ export default function Checkout() {
 
             <View
               className={`w-6 h-6 rounded-full items-center justify-center ${paymentMethod === 'cash'
-                ? 'bg-black'
-                : 'border border-gray-300'
+                ? 'bg-primary'
+                : 'border border-border'
                 }`}
             >
               {paymentMethod === 'cash' && (
@@ -240,17 +240,17 @@ export default function Checkout() {
           {/* Card Payment */}
           <TouchableOpacity
             onPress={() => setPaymentMethod('stripe')}
-            className={`flex-row items-center justify-between p-4 mb-6 rounded-2xl border bg-white ${paymentMethod === 'stripe'
-              ? 'border-black'
-              : 'border-gray-200'
+            className={`flex-row items-center justify-between p-4 mb-6 rounded-xl border bg-white ${paymentMethod === 'stripe'
+              ? 'border-primary bg-nimbus-blue'
+              : 'border-border'
               }`}
           >
             <View className="flex-row items-center flex-1">
-              <View className="items-center justify-center w-10 h-10 mr-3 rounded-full bg-[#ECECEC]">
+              <View className="items-center justify-center w-10 h-10 mr-3 rounded-lg bg-surface-muted">
                 <Ionicons
                   name="card-outline"
                   size={20}
-                  color="#222"
+                  color={COLORS.primary}
                 />
               </View>
 
@@ -267,8 +267,8 @@ export default function Checkout() {
 
             <View
               className={`w-6 h-6 rounded-full items-center justify-center ${paymentMethod === 'stripe'
-                ? 'bg-black'
-                : 'border border-gray-300'
+                ? 'bg-primary'
+                : 'border border-border'
                 }`}
             >
               {paymentMethod === 'stripe' && (
@@ -283,7 +283,7 @@ export default function Checkout() {
         </ScrollView>
 
         {/* Fixed Bottom Summary */}
-        <View className="px-4 pt-4 pb-6 bg-white border-t border-gray-200">
+        <View className="px-4 pt-4 pb-6 bg-white border-t border-border">
           <View className="p-4 bg-white rounded-xl">
             <Text className="mb-4 text-lg font-bold text-primary">
               Order Summary
@@ -291,23 +291,23 @@ export default function Checkout() {
 
             {/* Subtotal */}
             <View className="flex-row justify-between mb-2">
-              <Text className="text-gray-600">Subtotal</Text>
+              <Text className="text-secondary">Subtotal</Text>
               <Text className="font-bold">$ {breakdown.subtotal.toFixed(2)}</Text>
             </View>
 
             {/* Shipping */}
             <View className="flex-row justify-between mb-2">
-              <Text className="text-gray-600">Shipping</Text>
+              <Text className="text-secondary">Shipping</Text>
               <Text className="font-bold">$ {breakdown.shippingCost.toFixed(2)}</Text>
             </View>
 
             {/* Tax — R8: now matches the 10% the backend applies */}
             <View className="flex-row justify-between mb-2">
-              <Text className="text-gray-600">Tax (10%)</Text>
+              <Text className="text-secondary">Tax (10%)</Text>
               <Text className="font-bold">$ {breakdown.tax.toFixed(2)}</Text>
             </View>
 
-            <View className="flex-row justify-between pt-4 mt-4 border-t border-gray-200">
+            <View className="flex-row justify-between pt-4 mt-4 border-t border-border">
               <Text className="text-lg font-bold text-primary">Total</Text>
               <Text className="text-lg font-bold text-primary">$ {breakdown.totalAmount.toFixed(2)}</Text>
             </View>

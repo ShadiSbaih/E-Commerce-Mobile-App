@@ -2,8 +2,10 @@ import CartItem from '@/components/CartItem';
 import Header from '@/components/Header';
 import { useCart } from '@/Context/CartContext';
 import { useRouter } from 'expo-router';
-import { View, Text, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Button from '@/components/Button';
+import EmptyState from '@/components/EmptyState';
 
 export default function Cart() {
   const { cartItems, cartTotal, removeFromCart, updateQuantity } = useCart();
@@ -32,7 +34,7 @@ export default function Cart() {
             )}
           />
 
-          <View className='p-4 pb-24 bg-white shadow-sm rounded-t-3xl'>
+          <View className='p-4 pb-8 bg-white border-t border-border'>
             
             <View className='flex-row justify-between mb-2'>
               <Text className='text-secondary'>Subtotal</Text>
@@ -57,22 +59,12 @@ export default function Cart() {
               </Text>
             </View>
 
-            <TouchableOpacity 
-              className='items-center justify-center py-4 rounded-full bg-primary active:opacity-80'
-              onPress={() => router.push('/checkout')}
-            >
-              <Text className='text-lg font-bold text-white'>Checkout</Text>
-            </TouchableOpacity>
+            <Button onPress={() => router.push('/checkout')}>Checkout</Button>
 
           </View>
         </>
       ) : (
-        <View className="items-center justify-center flex-1">
-          <Text className="text-lg text-secondary">Your cart is empty</Text>
-          <TouchableOpacity onPress={() => router.push('/')} className="px-4 py-2 mt-10 rounded-full bg-primary active:opacity-80">
-            <Text className="text-xl font-bold text-white">Start Shopping</Text>
-          </TouchableOpacity>
-        </View>
+        <EmptyState title="Your cart is waiting." description="Add a few thoughtful finds and they’ll appear here." actionLabel="Start shopping" onAction={() => router.push('/')} icon="bag-outline" />
       )}
     </SafeAreaView>
   );

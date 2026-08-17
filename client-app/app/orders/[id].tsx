@@ -69,7 +69,7 @@ export default function OrderDetails() {
 
             <ScrollView className="flex-1 px-4 pt-4">
                 {/* Order Status */}
-                <View className="p-4 mb-4 bg-white border border-gray-100 rounded-xl">
+                <View className="p-4 mb-4 bg-white border border-border rounded-xl">
                     <Text className="mb-4 text-lg font-bold text-primary">Order Status</Text>
 
                     {ORDER_STEPS.map((step, index) => (
@@ -81,7 +81,7 @@ export default function OrderDetails() {
                                 )}
                             </View>
                             <View className="pb-4">
-                                <Text className={`font-bold ${step.completed ? 'text-primary' : 'text-gray-400'}`}>{step.title}</Text>
+                                <Text className={`font-bold ${step.completed ? 'text-primary' : 'text-disabled'}`}>{step.title}</Text>
                                 {step.date ? <Text className="text-xs text-secondary">{step.date}</Text> : null}
                             </View>
                         </View>
@@ -89,7 +89,7 @@ export default function OrderDetails() {
                 </View>
 
                 {/* Items */}
-                <View className="p-4 mb-4 bg-white border border-gray-100 rounded-xl">
+                <View className="p-4 mb-4 bg-white border border-border rounded-xl">
                     <Text className="mb-4 text-lg font-bold text-primary">Products</Text>
                     {order.items.map((item: any, index: number) => {
 
@@ -97,8 +97,8 @@ export default function OrderDetails() {
                         const image = productData?.images?.[0];
 
                         return (
-                            <View key={index} className={`flex-row ${index !== order.items.length - 1 && 'border-b border-gray-100 pb-4 mb-4'}`}>
-                                {image && <Image source={{ uri: image }} className="w-16 h-16 bg-gray-100 rounded-lg" resizeMode="contain" />}
+                            <View key={index} className={`flex-row ${index !== order.items.length - 1 && 'border-b border-border pb-4 mb-4'}`}>
+                                {image && <Image source={{ uri: image }} className="w-16 h-16 bg-surface-muted rounded-lg" resizeMode="contain" />}
                                 <View className="justify-center flex-1 ml-3">
                                     <Text className="font-medium text-primary" numberOfLines={1}>{item.name}</Text>
                                     <Text className="text-xs text-secondary">Size: {item.size}</Text>
@@ -113,7 +113,7 @@ export default function OrderDetails() {
                 </View>
 
                 {/* Shipping Details */}
-                <View className="p-4 mb-4 bg-white border border-gray-100 rounded-xl">
+                <View className="p-4 mb-4 bg-white border border-border rounded-xl">
                     <Text className="mb-2 text-lg font-bold text-primary">Shipping Details</Text>
                     <View className="flex-row items-center mb-2">
                         <Ionicons name="location-outline" size={20} color={COLORS.secondary} />
@@ -124,7 +124,7 @@ export default function OrderDetails() {
                 </View>
 
                 {/* Payment Summary */}
-                <View className="p-4 mb-8 bg-white border border-gray-100 rounded-xl">
+                <View className="p-4 mb-8 bg-white border border-border rounded-xl">
                     <Text className="mb-4 text-lg font-bold text-primary">Payment Summary</Text>
                     <View className="flex-row justify-between mb-2">
                         <Text className="text-secondary">Payment Method</Text>
@@ -136,7 +136,7 @@ export default function OrderDetails() {
                             {order.paymentStatus}
                         </Text>
                     </View>
-                    <View className="h-px my-2 bg-gray-100" />
+                    <View className="h-px my-2 bg-surface-muted" />
                     <View className="flex-row justify-between mb-2">
                         <Text className="text-secondary">Subtotal</Text>
                         <Text className="font-medium text-primary">${order.subtotal.toFixed(2)}</Text>
@@ -149,7 +149,7 @@ export default function OrderDetails() {
                         <Text className="text-secondary">Tax</Text>
                         <Text className="font-medium text-primary">${order.tax.toFixed(2)}</Text>
                     </View>
-                    <View className="h-px my-2 bg-gray-100" />
+                    <View className="h-px my-2 bg-surface-muted" />
                     <View className="flex-row justify-between">
                         <Text className="text-lg font-bold text-primary">Total</Text>
                         <Text className="text-lg font-bold text-primary">${order.totalAmount.toFixed(2)}</Text>

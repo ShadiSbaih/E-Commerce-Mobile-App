@@ -1,69 +1,10 @@
-import { View, TouchableOpacity, Text, Image } from 'react-native'
-import React from 'react'
-import { Ionicons } from '@expo/vector-icons'
-import { HeaderProps } from '@/constants/types'
-import { COLORS } from '@/constants';
+import React from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCart } from '@/Context/CartContext';
-
-
-//Best Reusable Header Ever Made 😁
-
-export default function Header({ title, showBack, showCart, showSearch, showMenu, showLogo }: HeaderProps) {
-    const router = useRouter();
-    const { itemCount } = useCart();
-
-    return (
-        <View className='flex-row items-center justify-between px-4 py-3 bg-white'>
-            {/* Header left side */}
-            <View className='flex-row items-center flex-1 '>
-
-                {showBack && (
-                    <TouchableOpacity className='mr-3' onPress={() => router.back()}>
-                        <Ionicons name="arrow-back-outline" size={24} color={COLORS.primary} />
-                    </TouchableOpacity>
-                )}
-
-                {showMenu && (
-                    <TouchableOpacity className='mr-3'>
-                        <Ionicons name="menu-outline" size={28} color={COLORS.primary} />
-                    </TouchableOpacity>
-                )}
-
-                {showLogo ? (
-                    <View className='flex-1'>
-                        <Image source={require('@/assets/logo.png')} style={{ width: "100%", height: 24 }} resizeMode="contain" />
-                    </View>
-                ) : title && (
-                    <Text className='flex-1 mr-8 text-xl font-bold text-center text-primary'>{title}</Text>
-                )}
-
-                {(!title && !showSearch) && <View className='flex-1' />}
-
-            </View>
-
-            {/* Header right side */}
-            <View className='flex-row items-center gap-4'>
-                {showSearch && (
-                    <TouchableOpacity>
-                        <Ionicons name="search-outline" size={28} color={COLORS.primary} />
-                    </TouchableOpacity>
-                )}
-
-                {
-                    showCart && (
-                        <TouchableOpacity onPress={() => router.push('/(tabs)/cart')}>
-                            <View className='relative'>
-                                <Ionicons name="bag-outline" size={28} color={COLORS.primary} />
-                                <View className='absolute items-center justify-center w-5 h-5 rounded-full bg-accent -top-2 -right-2'>
-                                    <Text className='text-xs font-bold text-white'>{itemCount}</Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                    )
-                }
-
-            </View>
-        </View>
-    )
-}
+import { HeaderProps } from '@/constants/types';
+import { colors, spacing, typography } from '@/theme';
+export default function Header({ title, showBack, showCart, showSearch, showMenu, showLogo }: HeaderProps) { const router = useRouter(); const { itemCount } = useCart(); return <View style={styles.header}><View style={styles.left}>{showBack ? <IconButton label="Go back" icon="arrow-back-outline" onPress={() => router.back()} /> : null}{showMenu ? <IconButton label="Menu" icon="menu-outline" /> : null}{showLogo ? <Image source={require('@/assets/logo.png')} style={styles.logo} resizeMode="contain" accessibilityLabel="Nimbus marketplace" /> : title ? <Text style={styles.title} numberOfLines={1}>{title}</Text> : <View style={styles.spacer} />}</View><View style={styles.actions}>{showSearch ? <IconButton label="Search" icon="search-outline" /> : null}{showCart ? <Pressable accessibilityRole="button" accessibilityLabel={`Cart, ${itemCount} items`} style={styles.iconButton} onPress={() => router.push('/(tabs)/cart')}><Ionicons name="bag-outline" size={23} color={colors.primary}/>{itemCount > 0 ? <View style={styles.count}><Text style={styles.countText}>{itemCount > 9 ? '9+' : itemCount}</Text></View> : null}</Pressable> : null}</View></View>; }
+function IconButton({ label, icon, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; onPress?: () => void }) { return <Pressable accessibilityRole="button" accessibilityLabel={label} hitSlop={8} style={styles.iconButton} onPress={onPress}><Ionicons name={icon} size={23} color={colors.primary} /></Pressable>; }
+const styles = StyleSheet.create({ header: { minHeight: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, backgroundColor: colors.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }, left: { flex: 1, flexDirection: 'row', alignItems: 'center', minWidth: 0 }, title: { flex: 1, color: colors.textPrimary, ...typography.h3, marginLeft: spacing.sm }, logo: { flex: 1, height: 25, maxWidth: 128 }, spacer: { flex: 1 }, actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 }, count: { position: 'absolute', top: 3, right: 2, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.nimbus500, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }, countText: { color: colors.white, fontSize: 9, fontWeight: '600' } });
