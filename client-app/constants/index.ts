@@ -1,20 +1,23 @@
+import { colors } from '@/theme';
+
+/** @deprecated Import `colors` from `@/theme` in new UI. */
 export const COLORS = {
-    primary: "#111111",
-    secondary: "#666666",
-    background: "#FFFFFF",
-    surface: "#F7F7F7",
-    accent: "#FF4C3B",
-    border: "#EEEEEE",
-    error: "#FF4444",
+    primary: colors.primary,
+    secondary: colors.textSecondary,
+    background: colors.background,
+    surface: colors.surfaceSoft,
+    accent: colors.nimbus500,
+    border: colors.border,
+    error: colors.error,
 };
 
 export const CATEGORIES = [
-    { id: 1, name: "Men", icon: "man-outline" },
-    { id: 2, name: "Women", icon: "woman-outline" },
-    { id: 3, name: "Kids", icon: "happy-outline" },
-    { id: 4, name: "Shoes", icon: "footsteps-outline" },
-    { id: 5, name: "Bag", icon: "briefcase-outline" },
-    { id: 6, name: "Other", icon: "grid-outline" },
+    { id: 1, name: "Home", icon: "home-outline" },
+    { id: 2, name: "Clothing", icon: "shirt-outline" },
+    { id: 3, name: "Jewelry", icon: "diamond-outline" },
+    { id: 4, name: "Art", icon: "color-palette-outline" },
+    { id: 5, name: "Accessories", icon: "bag-handle-outline" },
+    { id: 6, name: "Vintage", icon: "time-outline" },
 ];
 
 export const PROFILE_MENU = [
@@ -27,16 +30,16 @@ export const PROFILE_MENU = [
 export const getStatusColor = (status: string) => {
     switch (status) {
         case "placed":
-            return "bg-yellow-50 text-yellow-900";
+            return "bg-surface text-secondary";
         case "processing":
-            return "bg-indigo-50 text-indigo-900";
+            return "bg-nimbus-blue text-primary";
         case "shipped":
-            return "bg-purple-50 text-purple-900";
+            return "bg-nimbus-blue text-primary";
         case "delivered":
             return "bg-green-50 text-green-900";
         case "cancelled":
             return "bg-red-50 text-red-900";
         default:
-            return "bg-gray-50 text-gray-900";
+            return "bg-surface text-secondary";
     }
 };

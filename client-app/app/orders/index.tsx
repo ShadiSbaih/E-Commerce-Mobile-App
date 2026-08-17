@@ -85,7 +85,7 @@ export default function Orders() {
                     ) : null}
                     renderItem={({ item, index }) => (
                         <TouchableOpacity
-                            className="p-4 mb-4 bg-white border border-gray-100 shadow-sm rounded-xl"
+                            className="p-4 mb-4 bg-white border border-border rounded-xl"
                             onPress={() => router.push(`/orders/${item._id}`)}
                         >
                             <View className="flex-row justify-between mb-2">
@@ -110,13 +110,13 @@ export default function Orders() {
                                 <View
                                     className={`px-2 py-1 rounded-full ${item.paymentStatus === "paid"
                                         ? "bg-green-100"
-                                        : "bg-gray-100"
+                                        : "bg-surface-muted"
                                         }`}
                                 >
                                     <Text
                                         className={`text-xs font-bold capitalize ${item.paymentStatus === "paid"
                                             ? "text-green-700"
-                                            : "text-gray-700"
+                                            : "text-secondary"
                                             }`}
                                     >
                                         {item.paymentStatus}
@@ -144,7 +144,7 @@ export default function Orders() {
                                     return (
                                         <View
                                             key={idx}
-                                            className="p-1 mr-3 border border-gray-100 rounded-md bg-gray-50"
+                                            className="p-1 mr-3 border border-border rounded-md bg-surface"
                                         >
                                             {image ? (
                                                 <Image
@@ -153,7 +153,7 @@ export default function Orders() {
                                                     resizeMode="cover"
                                                 />
                                             ) : (
-                                                <View className="items-center justify-center w-12 h-12 bg-gray-200 rounded-md">
+                                                <View className="items-center justify-center w-12 h-12 bg-surface-muted rounded-md">
                                                     <Ionicons
                                                         name="image-outline"
                                                         size={20}
@@ -166,7 +166,7 @@ export default function Orders() {
                                 })}
                             </ScrollView>
 
-                            <View className="flex-row items-center justify-between pt-3 mt-2 border-t border-gray-100">
+                            <View className="flex-row items-center justify-between pt-3 mt-2 border-t border-border">
                                 <Text className="text-secondary">
                                     Items: {item.items.length}
                                 </Text>

@@ -111,7 +111,7 @@ export default function Shop() {
 
             <View className='mx-4 my-2 mb-2'>
                 <View className='flex-row gap-2'>
-                    <View className='flex-row items-center flex-1 bg-white border border-gray-100 rounded-xl px-3'>
+                    <View className='flex-row items-center flex-1 bg-white border border-border rounded-xl px-3'>
                         <Ionicons name="search" size={20} color={COLORS.secondary} />
                         <TextInput
                             placeholder='Search Products'
@@ -131,7 +131,7 @@ export default function Shop() {
 
                     <TouchableOpacity
                         onPress={handleSearchSubmit}
-                        className='items-center justify-center bg-gray-800 px-4 rounded-xl'
+                        className='items-center justify-center bg-primary px-4 rounded-xl'
                     >
                         <Ionicons name="options-outline" size={22} color="white" />
                     </TouchableOpacity>
@@ -148,7 +148,7 @@ export default function Shop() {
                                 className={`px-4 py-2 mr-2 rounded-full border ${
                                     isSelected
                                         ? 'bg-primary border-primary'
-                                        : 'bg-white border-gray-200'
+                                        : 'bg-white border-border'
                                 }`}
                             >
                                 <Text className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-primary'}`}>

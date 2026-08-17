@@ -144,7 +144,7 @@ export default function AddProduct() {
             keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0} // قم بتعديل الرقم حسب الـ Header الخاص بك
         >
             <ScrollView className="flex-1 p-4 bg-surface" keyboardShouldPersistTaps="handled">
-                <View className="p-4 mb-20 bg-white shadow-sm rounded-xl">
+                <View className="p-4 mb-20 bg-white rounded-xl">
 
                     {/* NAME */}
                     <Text className="mb-1 text-xs font-bold uppercase text-secondary">
@@ -256,7 +256,7 @@ export default function AddProduct() {
                                 ))}
                             </ScrollView>
                         ) : (
-                            <View className="items-center justify-center w-full h-32 bg-gray-100 border border-gray-300 border-dashed rounded-lg">
+                            <View className="items-center justify-center w-full h-32 bg-surface-muted border border-border border-dashed rounded-lg">
                                 <Ionicons name="cloud-upload-outline" size={32} color={COLORS.secondary} />
                                 <Text className="mt-2 text-xs text-secondary">
                                     Tap to upload images

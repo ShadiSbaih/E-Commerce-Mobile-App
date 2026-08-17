@@ -7,6 +7,7 @@ import { COLORS } from "@/constants";
 import type { Address } from "@/constants/types";
 import api from "@/constants/api";
 import Toast from "react-native-toast-message";
+import EmptyState from '@/components/EmptyState';
 
 export default function Addresses() {
     const [addresses, setAddresses] = useState<Address[]>([]);
@@ -120,10 +121,10 @@ export default function Addresses() {
             ) : (
                 <ScrollView className="flex-1 px-4 pt-4">
                     {addresses.length === 0 ? (
-                        <Text className="mt-10 text-center text-secondary">No addresses found</Text>
+                        <EmptyState title="Add a shipping address" description="Save an address to make checkout faster." icon="location-outline" />
                     ) : (
                         addresses.map((item) => (
-                            <View key={item._id} className="p-4 mb-4 bg-white shadow-sm rounded-xl">
+                            <View key={item._id} className="p-4 mb-4 bg-white rounded-xl">
                                 <View className="flex-row items-center justify-between mb-2">
                                     <View className="flex-row items-center">
                                         <Ionicons
@@ -153,7 +154,7 @@ export default function Addresses() {
                         ))
                     )}
 
-                    <TouchableOpacity className="flex-row items-center justify-center p-4 mt-2 mb-8 border border-gray-300 border-dashed rounded-xl" onPress={openAddModal}>
+                    <TouchableOpacity className="flex-row items-center justify-center p-4 mt-2 mb-8 border border-border border-dashed rounded-xl" onPress={openAddModal}>
                         <Ionicons name="add" size={24} color={COLORS.secondary} />
                         <Text className="ml-2 font-medium text-secondary">Add New Address</Text>
                     </TouchableOpacity>
@@ -175,7 +176,7 @@ export default function Addresses() {
                             <Text className="mb-2 font-medium text-primary">Label</Text>
                             <View className="flex-row gap-3 mb-4">
                                 {["Home", "Work", "Other"].map((t) => (
-                                    <TouchableOpacity key={t} onPress={() => setType(t)} className={`px-4 py-2 rounded-full border ${type === t ? 'bg-primary border-primary' : 'bg-white border-gray-300'}`}>
+                                    <TouchableOpacity key={t} onPress={() => setType(t)} className={`px-4 py-2 rounded-full border ${type === t ? 'bg-primary border-primary' : 'bg-white border-border'}`}>
                                         <Text className={type === t ? 'text-white' : 'text-primary'}>{t}</Text>
                                     </TouchableOpacity>
                                 ))}
@@ -207,13 +208,13 @@ export default function Addresses() {
                             </View>
 
                             <TouchableOpacity className="flex-row items-center mb-8" onPress={() => setIsDefault(!isDefault)}>
-                                <View className={`w-5 h-5 border rounded mr-2 items-center justify-center ${isDefault ? 'bg-primary border-primary' : 'border-gray-300'}`}>
+                                <View className={`w-5 h-5 border rounded mr-2 items-center justify-center ${isDefault ? 'bg-primary border-primary' : 'border-border'}`}>
                                     {isDefault && <Ionicons name="checkmark" size={14} color="white" />}
                                 </View>
                                 <Text className="text-primary">Set as default address</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity className="items-center w-full py-4 mb-10 rounded-full bg-primary" onPress={handleSaveAddress} disabled={submitting}>
+                            <TouchableOpacity className="items-center w-full py-4 mb-10 rounded-xl bg-primary" onPress={handleSaveAddress} disabled={submitting}>
                                 {submitting ? <ActivityIndicator color="white" /> : <Text className="text-lg font-bold text-white">Save Address</Text>}
                             </TouchableOpacity>
                         </ScrollView>

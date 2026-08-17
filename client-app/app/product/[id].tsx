@@ -1,196 +1,32 @@
-import { View, Text, ActivityIndicator, ScrollView, Image, Dimensions, TouchableOpacity } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Product } from '@/constants/types';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 import { useCart } from '@/Context/CartContext';
 import { useWishlist } from '@/Context/WishlistContext';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS } from '@/constants';
-import { Ionicons } from '@expo/vector-icons';
-import Toast from "react-native-toast-message";
+import type { Product } from '@/constants/types';
 import api from '@/constants/api';
-
-
-const { width } = Dimensions.get('window');
+import Badge from '@/components/Badge';
+import Button from '@/components/Button';
+import EmptyState from '@/components/EmptyState';
+import { colors, radius, spacing, typography } from '@/theme';
 
 export default function ProductDetails() {
-    const { id } = useLocalSearchParams(); // Get the product ID from the route parameters
-    const router = useRouter();
-    const [product, setProduct] = useState<Product | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    const { addToCart, cartItems, itemCount } = useCart();
-    const { toggleWishlist, isInWishlist } = useWishlist();
-    const [selectedSize, setSelectedSize] = useState<string | null>(null);
-    const [activeImageIndex, setActiveImageIndex] = useState(0);
-    const insets = useSafeAreaInsets();
-
-    const fetchProduct = async () => {
-        try {
-            setLoading(true);
-            const { data } = await api.get(`/products/${id}`);
-            if (data.success) {
-                setProduct(data.data);
-            }
-
-        } catch (error) {
-            console.error("Error fetching product:", error);
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to load product',
-                text2: 'Please try again later.',
-            });
-        }
-        finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        fetchProduct();
-    }, [id]);
-
-    if (loading) {
-        return (
-            <SafeAreaView className='items-center justify-center flex-1'>
-                <ActivityIndicator size="large" color={COLORS.primary} />
-            </SafeAreaView>
-        )
-    }
-
-    if (!product) {
-        return (
-            <SafeAreaView className='items-center justify-center flex-1'>
-                <Text className='text-lg text-gray-600'>Product not found</Text>
-            </SafeAreaView>
-        )
-    }
-
-    const isLiked = isInWishlist(product._id);
-
-    const handleAddToCart = () => {
-        if (!selectedSize) {
-            Toast.show({
-                type: 'info',
-                text1: 'No size selected',
-                text2: 'Please select a size before adding to cart.',
-                text1Style: { fontSize: 20, fontWeight: 700, color: "black", textAlign: "left" },
-                text2Style: { fontSize: 14, color: "black", textAlign: "left" },
-            });
-            return;
-        }
-        addToCart(product, selectedSize || "");
-    }
-
-    return (
-        <View className='flex-1 bg-white'>
-            <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-                {/* images carousel */}
-                <View className='relative h-[450px] bg-gray-100 mb-4' >
-                    <ScrollView horizontal pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        onMomentumScrollEnd={(e) => {
-                            const slide = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width)
-                            setActiveImageIndex(slide)
-                        }}>
-                        {product.images?.map((img, index) => (
-                            <Image key={index}
-                                source={{ uri: img }}
-                                style={{ width: width, height: 450 }}
-                                resizeMode="cover" />
-                        ))}
-
-                    </ScrollView>
-                    {/* Header Actions */}
-
-                    <View
-                        className='absolute z-10 flex-row items-center justify-between left-4 right-4'
-                        style={{ top: insets.top + 16 }}
-                    >
-                        <TouchableOpacity className='items-center justify-center rounded-full size-14 bg-white/85' onPress={() => router.back()}>
-                            <Ionicons name="arrow-back" size={26} color={COLORS.primary} />
-                        </TouchableOpacity>
-                        <TouchableOpacity className='items-center justify-center rounded-full size-14 bg-white/85' onPress={() => toggleWishlist(product)}>
-                            <Ionicons name={isLiked ? "heart" : "heart-outline"} size={26} color={COLORS.accent} />
-                        </TouchableOpacity>
-                    </View>
-                    {/* Pagination dots  */}
-                    <View className='absolute left-0 right-0 flex-row items-center justify-center gap-2 bottom-4'>
-                        {product.images?.map((_, index) => (
-                            <View key={index} className={`h-2 rounded-full${index === activeImageIndex ? ' w-6 bg-primary' : ' w-2 bg-gray-300'
-                                }`} />
-
-                        ))}
-                    </View>
-                </View>
-                {/* Product info */}
-                <View className='px-5 pb-10'>
-                    <View className='flex-row items-start justify-between'>
-                        <Text className='mr-4 text-[22px] font-semibold leading-7 text-primary'>
-                            {product.name}
-                        </Text>
-                        <View>
-                            <Ionicons name="star" size={18} color="#FFD700" />
-                            <Text className='ml-1 text-sm font-bold '>{product.ratings.average.toFixed(1)}</Text>
-                            <Text className='ml-1 text-xs text-secondary'>({product.ratings.count})</Text>
-                        </View>
-                    </View>
-
-                    {/* price */}
-                    <Text className='mb-6 text-2xl font-bold text-primary'>${product.price.toFixed(2)}</Text>
-
-                    {/* sizes */}
-                    {
-                        product.sizes && product.sizes.length > 0 && (
-                            <>
-                                <Text className='mb-3 text-base font-bold text-primary'>Size</Text>
-                                <View className='flex-row flex-wrap gap-3 mb-6'>
-                                    {product.sizes.map((size) => (
-                                        <TouchableOpacity key={size}
-                                            className={` size-14 items-center justify-center rounded-full border ${selectedSize === size ? 'border-primary bg-primary' : 'border-gray-100 bg-white'
-                                                } p-4`}
-                                            onPress={() => setSelectedSize(size)}
-                                        >
-                                            <Text className={`text-base font-bold ${selectedSize === size ? 'text-white' : 'text-gray-500'
-                                                }`}>
-                                                {size}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </>
-                        )
-                    }
-                    {/* description */}
-                    <Text className='mb-2 text-base font-bold text-primary'>Description</Text>
-                    <Text className='mb-6 leading-6 text-secondary'>{product.description}</Text>
-
-                </View>
-
-            </ScrollView>
-            {/* Footer */}
-            <View className='absolute bottom-0 left-0 right-0 flex-row p-4 bg-white border-t border-gray-100'>
-
-                <TouchableOpacity
-                    onPress={handleAddToCart}
-                    className='flex-row items-center justify-center w-4/5 py-4 rounded-full shadow-lg bg-primary ' style={{ marginBottom: insets.bottom }}
-                >
-                    <Ionicons name="bag-outline" size={20} color="white" />
-                    <Text className='ml-2 text-base font-bold text-white'>Add to Cart</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    onPress={() => router.push("/(tabs)/cart")}
-                    className='relative flex-row justify-center w-1/5 py-3 '
-                >
-                    <Ionicons name="cart-outline" size={24} />
-                    <View className='absolute z-10 flex-row justify-center bg-black rounded-full top-2 right-4 size-4'>
-                        <Text className='font-bold text-white text-[9px]'>{itemCount}</Text>
-                    </View>
-
-                </TouchableOpacity>
-            </View>
-
-        </View>
-    )
+  const { id } = useLocalSearchParams(); const router = useRouter(); const { width } = useWindowDimensions(); const insets = useSafeAreaInsets();
+  const [product, setProduct] = useState<Product | null>(null); const [loading, setLoading] = useState(true); const [selectedSize, setSelectedSize] = useState<string | null>(null); const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const { addToCart, itemCount } = useCart(); const { toggleWishlist, isInWishlist } = useWishlist();
+  useEffect(() => { (async () => { setLoading(true); try { const { data } = await api.get(`/products/${id}`); if (data.success) setProduct(data.data); } catch { Toast.show({ type: 'error', text1: "We couldn't load this product.", text2: 'Please try again.' }); } finally { setLoading(false); } })(); }, [id]);
+  if (loading) return <SafeAreaView style={styles.loader}><ActivityIndicator size="large" color={colors.primary} /></SafeAreaView>;
+  if (!product) return <SafeAreaView style={styles.safe}><EmptyState title="Product not found" description="This item may no longer be available." actionLabel="Browse products" onAction={() => router.replace('/shop')} icon="cube-outline" /></SafeAreaView>;
+  const liked = isInWishlist(product._id); const add = () => { if (product.sizes?.length && !selectedSize) { Toast.show({ type: 'info', text1: 'Choose an option first', text2: 'Select a size before adding this item to your cart.' }); return; } addToCart(product, selectedSize || 'Default'); };
+  return <SafeAreaView style={styles.safe} edges={['top']}><View style={styles.page}><ScrollView contentContainerStyle={[styles.content, { paddingBottom: 118 + insets.bottom }]} showsVerticalScrollIndicator={false}>
+    <View style={styles.gallery}><ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={(event) => setActiveImageIndex(Math.round(event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width))}>{product.images?.map((uri, index) => <Image key={index} source={{ uri }} style={{ width, height: width * 1.05 }} resizeMode="cover" accessibilityLabel={`${product.name}, image ${index + 1}`} />)}</ScrollView><View style={styles.topActions}><CircleButton label="Go back" icon="arrow-back" onPress={() => router.back()} /><CircleButton label={liked ? 'Remove from favorites' : 'Add to favorites'} icon={liked ? 'heart' : 'heart-outline'} color={liked ? colors.nimbus500 : colors.primary} onPress={() => toggleWishlist(product)} /></View>{product.images.length > 1 ? <View style={styles.dots}>{product.images.map((_, index) => <View key={index} style={[styles.dot, activeImageIndex === index && styles.dotActive]} />)}</View> : null}</View>
+    <View style={styles.details}><Badge tone="highlight">Independent maker</Badge><View style={styles.titleRow}><Text style={styles.title}>{product.name}</Text><View style={styles.rating}><Ionicons name="star" size={16} color={colors.warning}/><Text style={styles.ratingText}>{product.ratings?.average?.toFixed(1) || 'New'}{product.ratings?.count ? ` · ${product.ratings.count}` : ''}</Text></View></View><Text style={styles.price}>${product.price.toFixed(2)}</Text><View style={styles.maker}><Ionicons name="storefront-outline" size={19} color={colors.textSecondary}/><View><Text style={styles.makerCaption}>Made by</Text><Text style={styles.makerName}>An independent shop</Text></View></View>
+    {product.sizes?.length ? <View style={styles.optionGroup}><Text style={styles.sectionTitle}>Choose size</Text><View style={styles.sizes}>{product.sizes.map(size => <Pressable key={size} accessibilityRole="radio" accessibilityState={{ selected: selectedSize === size }} onPress={() => setSelectedSize(size)} style={[styles.size, selectedSize === size && styles.sizeSelected]}><Text style={[styles.sizeText, selectedSize === size && styles.sizeTextSelected]}>{size}</Text></Pressable>)}</View></View> : null}
+    <View style={styles.delivery}><Ionicons name="cube-outline" size={20} color={colors.textSecondary}/><View><Text style={styles.deliveryTitle}>Ready to ship</Text><Text style={styles.deliveryText}>Made with care and packed by the seller.</Text></View></View><Text style={styles.sectionTitle}>About this item</Text><Text style={styles.description}>{product.description}</Text></View>
+  </ScrollView><View style={[styles.footer, { paddingBottom: Math.max(spacing.md, insets.bottom) }]}><Button onPress={add} style={styles.addButton}>Add to cart</Button><Pressable accessibilityRole="button" accessibilityLabel={`Open cart, ${itemCount} items`} style={styles.cartButton} onPress={() => router.push('/(tabs)/cart')}><Ionicons name="bag-outline" size={23} color={colors.primary}/>{itemCount ? <View style={styles.count}><Text style={styles.countText}>{itemCount}</Text></View> : null}</Pressable></View></View></SafeAreaView>;
 }
+function CircleButton({ label, icon, onPress, color = colors.primary }: { label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void; color?: string }) { return <Pressable accessibilityRole="button" accessibilityLabel={label} style={styles.circleButton} onPress={onPress}><Ionicons name={icon} size={23} color={color}/></Pressable>; }
+const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: colors.background }, page: { flex: 1 }, loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }, content: {}, gallery: { position: 'relative', backgroundColor: colors.surfaceMuted }, topActions: { position: 'absolute', top: spacing.md, left: spacing.lg, right: spacing.lg, flexDirection: 'row', justifyContent: 'space-between' }, circleButton: { width: 44, height: 44, borderRadius: radius.full, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' }, dots: { position: 'absolute', bottom: spacing.md, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: spacing.xs }, dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.white, opacity: 0.6 }, dotActive: { width: 18, opacity: 1 }, details: { padding: spacing.xl, gap: spacing.lg }, titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing.md }, title: { flex: 1, color: colors.textPrimary, ...typography.h2 }, rating: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs }, ratingText: { color: colors.textSecondary, ...typography.bodySmall }, price: { color: colors.textPrimary, ...typography.h2 }, maker: { flexDirection: 'row', gap: spacing.md, paddingVertical: spacing.lg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border }, makerCaption: { color: colors.textMuted, ...typography.caption }, makerName: { color: colors.textPrimary, ...typography.bodySmall, fontWeight: '600' }, optionGroup: { gap: spacing.md }, sectionTitle: { color: colors.textPrimary, ...typography.h3 }, sizes: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, size: { minWidth: 48, minHeight: 44, paddingHorizontal: spacing.md, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderStrong, borderRadius: radius.sm }, sizeSelected: { borderColor: colors.primary, backgroundColor: colors.nimbus200 }, sizeText: { color: colors.textSecondary, ...typography.bodySmall, fontWeight: '600' }, sizeTextSelected: { color: colors.primary }, delivery: { flexDirection: 'row', gap: spacing.md, padding: spacing.lg, backgroundColor: colors.surfaceSoft, borderRadius: radius.md }, deliveryTitle: { color: colors.textPrimary, ...typography.bodySmall, fontWeight: '600' }, deliveryText: { color: colors.textSecondary, ...typography.caption, marginTop: spacing.xs }, description: { color: colors.textSecondary, ...typography.body }, footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingTop: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', gap: spacing.md, backgroundColor: colors.surface, borderTopWidth: 1, borderColor: colors.border }, addButton: { flex: 1 }, cartButton: { width: 52, minHeight: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.nimbus200, borderRadius: radius.md }, count: { position: 'absolute', top: 3, right: 2, width: 16, height: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.nimbus500, borderRadius: 8 }, countText: { color: colors.white, fontSize: 9, fontWeight: '600' } });

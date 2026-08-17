@@ -1,56 +1,9 @@
-import { View, Image, TouchableOpacity, Text } from 'react-native'
-import React from 'react'
-import type { CartItem as CartItemType } from '@/Context/CartContext'
+import React from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '@/constants';
-
-type CartItemProps = {
-    item: CartItemType;
-    onRemove?: () => void;
-    onUpdateQuantity?: (newQty: number) => void;
-};
-
-export default function CartItem({ item, onRemove, onUpdateQuantity }: CartItemProps) {
-    const imageUrl = item.product.images?.[0] || 'https://placehold.co/400';
-
-    return (
-        <View className='flex-row p-3 mb-4 bg-white rounded-xl'>
-            <View className='w-20 h-20 mr-3 overflow-hidden bg-gray-100 rounded-lg'>
-                <Image source={{ uri: imageUrl }} className='w-full h-full' resizeMode='cover' />
-            </View>
-
-            <View className='justify-between flex-1'>
-                <View className='flex-row items-start justify-between'>
-                    <View>
-                        <Text className='mb-1 text-sm font-medium text-primary'>{item.product.name}</Text>
-                        <Text className='text-xs text-secondary'>Size: {item.size}</Text>
-                    </View>
-
-                    <TouchableOpacity onPress={onRemove}>
-                        <Ionicons name="close-circle-outline" size={20} color="#FF4C3B" />
-                    </TouchableOpacity>
-                </View>
-
-                {/* price and quantity controls */}
-                <View className='flex-row items-center justify-between mt-2'>
-                    <Text className='text-base font-bold text-primary'>${item.price.toFixed(2)}</Text>
-
-                    <View className='flex-row items-center px-2 py-1 rounded bg-surface-full'>
-                        <TouchableOpacity
-                            onPress={() => onUpdateQuantity && onUpdateQuantity(Math.max(1, item.quantity - 1))}
-                        >
-                            <Ionicons name="remove-circle-outline" size={20} color={COLORS.primary} />
-                        </TouchableOpacity>
-                        <Text className='px-4 text-sm font-medium text-primary'>{item.quantity}</Text>
-                        <TouchableOpacity onPress={() => onUpdateQuantity && onUpdateQuantity(item.quantity + 1)}>
-                            <Ionicons name="add-circle-outline" size={20} color={COLORS.primary} />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-
-
-            </View>
-        </View>
-    )
-}
+import type { CartItem as CartItemType } from '@/Context/CartContext';
+import { colors, radius, spacing, typography } from '@/theme';
+type Props = { item: CartItemType; onRemove?: () => void; onUpdateQuantity?: (quantity: number) => void; };
+export default function CartItem({ item, onRemove, onUpdateQuantity }: Props) { const imageUrl = item.product.images?.[0] || 'https://placehold.co/400'; return <View style={styles.row}><Image source={{ uri: imageUrl }} style={styles.image} /><View style={styles.info}><View><Text style={styles.title} numberOfLines={2}>{item.product.name}</Text><Text style={styles.meta}>Option: {item.size}</Text></View><View style={styles.bottom}><Text style={styles.price}>${item.price.toFixed(2)}</Text><View style={styles.quantity}><Step label="Decrease quantity" icon="remove" onPress={() => onUpdateQuantity?.(Math.max(1, item.quantity - 1))}/><Text style={styles.qty}>{item.quantity}</Text><Step label="Increase quantity" icon="add" onPress={() => onUpdateQuantity?.(item.quantity + 1)}/></View></View></View><Pressable accessibilityRole="button" accessibilityLabel={`Remove ${item.product.name} from cart`} onPress={onRemove} style={styles.remove}><Ionicons name="close" size={18} color={colors.textSecondary}/></Pressable></View>; }
+function Step({ label, icon, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; onPress?: () => void }) { return <Pressable accessibilityRole="button" accessibilityLabel={label} style={styles.step} onPress={onPress}><Ionicons name={icon} size={16} color={colors.primary}/></Pressable>; }
+const styles = StyleSheet.create({ row: { position: 'relative', flexDirection: 'row', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.md }, image: { width: 88, height: 104, borderRadius: radius.md, backgroundColor: colors.surfaceMuted }, info: { flex: 1, justifyContent: 'space-between', paddingRight: spacing['2xl'] }, title: { color: colors.textPrimary, ...typography.bodySmall, fontWeight: '600' }, meta: { color: colors.textMuted, ...typography.caption, marginTop: spacing.xs }, bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md }, price: { color: colors.textPrimary, ...typography.body, fontWeight: '600' }, quantity: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.sm, backgroundColor: colors.surfaceSoft }, step: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }, qty: { color: colors.textPrimary, minWidth: 24, textAlign: 'center', ...typography.bodySmall, fontWeight: '600' }, remove: { position: 'absolute', top: spacing.sm, right: 0, width: 36, height: 36, alignItems: 'center', justifyContent: 'center' } });

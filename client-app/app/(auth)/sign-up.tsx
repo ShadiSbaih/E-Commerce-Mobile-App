@@ -160,7 +160,7 @@ export default function SignUpScreen() {
                         <View className="flex-row gap-3 mb-4">
                             <View className="flex-1 gap-2">
                                 <Text className="text-sm font-semibold text-secondary">First name</Text>
-                                <View className="flex-row items-center px-4 py-3 bg-white rounded-2xl">
+                                <View className="flex-row items-center px-4 py-3 bg-surface rounded-xl">
                                     <Ionicons name="person-outline" size={18} color={COLORS.secondary} />
                                     <TextInput
                                         className="flex-1 ml-3 text-primary"
@@ -173,7 +173,7 @@ export default function SignUpScreen() {
                             </View>
                             <View className="flex-1 gap-2">
                                 <Text className="text-sm font-semibold text-secondary">Last name</Text>
-                                <View className="flex-row items-center px-4 py-3 bg-white rounded-2xl">
+                                <View className="flex-row items-center px-4 py-3 bg-surface rounded-xl">
                                     <Ionicons name="person-outline" size={18} color={COLORS.secondary} />
                                     <TextInput
                                         className="flex-1 ml-3 text-primary"
@@ -188,7 +188,7 @@ export default function SignUpScreen() {
 
                         <View className="gap-2 mb-4">
                             <Text className="text-sm font-semibold text-secondary">Email</Text>
-                            <View className="flex-row items-center px-4 py-3 bg-white rounded-2xl">
+                            <View className="flex-row items-center px-4 py-3 bg-surface rounded-xl">
                                 <Ionicons name="mail-outline" size={18} color={COLORS.secondary} />
                                 <TextInput
                                     className="flex-1 ml-3 text-primary"
@@ -204,7 +204,7 @@ export default function SignUpScreen() {
 
                         <View className="gap-2 mb-6">
                             <Text className="text-sm font-semibold text-secondary">Password</Text>
-                            <View className="flex-row items-center px-4 py-3 bg-white rounded-2xl">
+                            <View className="flex-row items-center px-4 py-3 bg-surface rounded-xl">
                                 <Ionicons name="lock-closed-outline" size={18} color={COLORS.secondary} />
                                 <TextInput
                                     className="flex-1 ml-3 text-primary"
@@ -225,7 +225,7 @@ export default function SignUpScreen() {
                         </View>
 
                         <TouchableOpacity
-                            className={`w-full items-center rounded-full py-4 ${
+                            className={`w-full items-center rounded-xl py-4 ${
                                 isBusy || !emailAddress || !password ? "bg-gray-300" : "bg-primary"
                             }`}
                             onPress={onSignUpPress}
@@ -267,7 +267,7 @@ export default function SignUpScreen() {
 
                         <View className="mb-6">
                             <TextInput
-                                className="w-full px-4 py-4 text-lg tracking-widest text-center bg-white rounded-2xl text-primary"
+                                className="w-full px-4 py-4 text-lg tracking-widest text-center bg-surface rounded-xl text-primary"
                                 placeholder="123456"
                                 placeholderTextColor="#9ca3af"
                                 keyboardType="number-pad"
@@ -277,7 +277,7 @@ export default function SignUpScreen() {
                         </View>
 
                         <TouchableOpacity
-                            className={`w-full items-center rounded-full py-4 ${
+                            className={`w-full items-center rounded-xl py-4 ${
                                 isBusy ? "bg-gray-300" : "bg-primary"
                             }`}
                             onPress={onVerifyPress}
@@ -291,7 +291,7 @@ export default function SignUpScreen() {
                         </TouchableOpacity>
 
                         <Pressable
-                            className="items-center w-full py-3 mt-4 border rounded-full border-primary"
+                            className="items-center w-full py-3 mt-4 border rounded-xl border-primary"
                             onPress={async () => {
                                 const { error } = await signUp.verifications.sendEmailCode();
                                 if (error) {

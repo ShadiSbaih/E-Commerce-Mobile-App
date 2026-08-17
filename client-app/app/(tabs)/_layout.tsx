@@ -1,7 +1,7 @@
 import React from 'react'
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { COLORS } from '@/constants'
+import { colors } from '@/theme'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useCart } from '@/Context/CartContext'
 import { Text, View } from 'react-native'
@@ -15,13 +15,13 @@ export default function TabLayout() {
         <Tabs
             screenOptions={{
                 headerShown: false,
-                tabBarActiveTintColor: COLORS.primary,
-                tabBarInactiveTintColor: "#cdcde0",
+                tabBarActiveTintColor: colors.primary,
+                tabBarInactiveTintColor: colors.textDisabled,
                 tabBarShowLabel: false,
 
                 tabBarStyle: {
-                    backgroundColor: "#FFF",
-                    borderTopColor: COLORS.border,
+                    backgroundColor: colors.surface,
+                    borderTopColor: colors.border,
                     borderTopWidth: 1,
 
                     height: 64 + insets.bottom,
@@ -29,7 +29,7 @@ export default function TabLayout() {
                     paddingBottom: insets.bottom,
 
                     // مهم
-                    position: "absolute",
+                    position: "relative",
                 },
             }}
         >
