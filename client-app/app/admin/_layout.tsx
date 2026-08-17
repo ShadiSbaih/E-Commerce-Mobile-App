@@ -53,7 +53,7 @@ export default function AdminLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "Dashboard",
+                    title: "Admin Dashboard",
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="grid-outline" size={size} color={color} />
                     )
