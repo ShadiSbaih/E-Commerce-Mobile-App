@@ -11,6 +11,7 @@ import { CartProvider } from "@/Context/CartContext";
 import { WishlistProvider } from "@/Context/WishlistContext";
 import { setAuthHandlers } from "@/constants/api";
 import BrandLoader from "@/components/BrandLoader";
+import { LoadingProvider } from "@/Context/LoadingContext";
 
 import "../global.css";
 import { colors } from '@/theme';
@@ -70,15 +71,17 @@ export default function RootLayout() {
         publishableKey={publishableKey!}
         tokenCache={tokenCache}
       >
-        <CartProvider>
-          <WishlistProvider>
-            <AuthGate>
-              <StatusBar style="dark" backgroundColor={colors.background} />
-              <Stack screenOptions={{ headerShown: false }} />
-              <Toast />
-            </AuthGate>
-          </WishlistProvider>
-        </CartProvider>
+        <LoadingProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <AuthGate>
+                <StatusBar style="dark" backgroundColor={colors.background} />
+                <Stack screenOptions={{ headerShown: false }} />
+                <Toast />
+              </AuthGate>
+            </WishlistProvider>
+          </CartProvider>
+        </LoadingProvider>
       </ClerkProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

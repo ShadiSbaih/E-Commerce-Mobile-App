@@ -138,8 +138,10 @@ To run this project, you will need to add the following environment variables.
 Create a `.env` file in the `client-app` folder:
 ```env
 EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key
-EXPO_PUBLIC_API_BASE_URL=http://localhost:5000/api # Adjust port if necessary
+EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3000/api # The app resolves this to the Metro LAN host on mobile
 ```
+
+For local mobile development, start the API and Expo from the same computer and connect the phone to the same Wi-Fi network. If Expo cannot provide the Metro host (for example in a standalone development build), replace `127.0.0.1` with the computer's LAN IP, such as `192.168.1.20`.
 
 ### Server (`server/.env`)
 Create a `.env` file in the `server` folder:
