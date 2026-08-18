@@ -36,6 +36,14 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Server TypeScript build output
+# The server tsconfig currently emits JavaScript, declarations, and source maps
+# next to the TypeScript sources when `tsc` runs.
+/server/**/*.js
+/server/**/*.js.map
+/server/**/*.d.ts
+/server/**/*.d.ts.map
+
 app-example
 
 # generated native folders

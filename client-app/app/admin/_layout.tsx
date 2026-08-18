@@ -14,7 +14,7 @@ export default function AdminLayout() {
         if (isLoaded && (!user || user.publicMetadata?.role !== "admin")) {
             router.replace("/(tabs)");
         }
-    }, [isLoaded, user]);
+    }, [isLoaded, router, user]);
 
     if (!isLoaded) {
         return (
@@ -53,7 +53,7 @@ export default function AdminLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "Dashboard",
+                    title: "Admin Dashboard",
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="grid-outline" size={size} color={color} />
                     )

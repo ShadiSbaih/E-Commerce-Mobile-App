@@ -34,24 +34,24 @@ export const addToCart = async (req: Request, res: Response) => {
         .json({ success: false, message: "Product not found" });
     }
 
-    if (product.stock < quantity) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Insufficient stock" });
-    }
-
     let cart = await Cart.findOne({ user: req.user._id });
     if (!cart) {
       cart = await Cart.create({ user: req.user._id, items: [] });
     }
     // Find item with same product and size
-    const existingItem = cart.items.find((item) => {
+    const existingItemInCart = cart.items.find((item) => {
       return item.product.toString() === productId && item.size === size;
     });
 
-    if (existingItem) {
-      existingItem.quantity += quantity;
-      existingItem.price = product.price;
+    if (product.stock < (existingItemInCart?.quantity ?? 0) + quantity) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Insufficient stock" });
+    }
+
+    if (existingItemInCart) {
+      existingItemInCart.quantity += quantity;
+      existingItemInCart.price = product.price;
     } else {
       cart.items.push({
         product: productId,

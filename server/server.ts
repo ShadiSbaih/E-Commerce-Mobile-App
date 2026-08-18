@@ -32,7 +32,7 @@ for (const env of requiredEnv) {
 }
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = Number(process.env.PORT) || 3000;
 
 // R19: Parse ALLOWED_ORIGINS as a comma-separated list so multiple
 // origins (e.g. "https://app.example.com,https://admin.example.com")
@@ -97,8 +97,9 @@ async function startServer() {
   try {
     await connectDB();
 
-    server = app.listen(port, () => {
-      console.log(`🚀 Server safely running at http://localhost:${port}`);
+    // Listen on all interfaces so a phone on the same LAN can reach the API.
+    server = app.listen(port, "0.0.0.0", () => {
+      console.log(`🚀 Server safely running at http://0.0.0.0:${port}`);
     });
 
     // Run underlying setups asynchronously without stalling server initialization

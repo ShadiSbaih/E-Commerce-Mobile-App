@@ -62,20 +62,23 @@ export const updateAddress = async (req: Request, res: Response) => {
       await Address.updateMany({ user: req.user._id }, { isDefault: false });
     }
 
-    addressItem = await Address.findByIdAndUpdate(
-      req.params.id,
-      {
-        user: req.user._id,
-        type,
-        street,
-        city,
-        state,
-        zipCode,
-        country,
-        isDefault,
-      },
-      { new: true },
-    );
+    const updates: Record<string, unknown> = { user: req.user._id };
+    for (const [key, value] of Object.entries({
+      type,
+      street,
+      city,
+      state,
+      zipCode,
+      country,
+      isDefault,
+    })) {
+      if (value !== undefined) updates[key] = value;
+    }
+
+    addressItem = await Address.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+      runValidators: true,
+    });
 
     res.json({ success: true, data: addressItem });
   } catch (error: any) {
