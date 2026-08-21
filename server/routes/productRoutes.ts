@@ -10,7 +10,9 @@ import { authorize, protect } from "../middleware/auth.js";
 import upload from "../middleware/upload.js";
 import {
   objectIdParam,
+  validateBody,
   validateQuery,
+  createProductSchema,
   productsQuerySchema,
 } from "../middleware/validate.js";
 import express from "express";
@@ -28,6 +30,7 @@ ProductRouter.post(
   protect,
   authorize("admin"),
   upload.array("images", 5),
+  validateBody(createProductSchema),
   createProduct,
 );
 ProductRouter.put(

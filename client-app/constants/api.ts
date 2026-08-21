@@ -14,6 +14,12 @@ const LOCAL_API_PORT = 3000;
 function getLocalApiHost() {
   const metroHost = Constants.expoConfig?.hostUri?.split(":")[0];
 
+  // Android Emulator maps 10.0.2.2 to the host computer. A physical
+  // Android device must use the computer's LAN address instead.
+  if (Platform.OS === "android" && Constants.isDevice === false) {
+    return "10.0.2.2";
+  }
+
   if (metroHost) return metroHost;
   if (Platform.OS === "android") return "10.0.2.2";
   return "localhost";
