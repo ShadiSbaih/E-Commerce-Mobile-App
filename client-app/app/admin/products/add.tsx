@@ -21,6 +21,11 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useAuth } from "@clerk/expo";
 import api from "@/constants/api";
+import axios from "axios";
+import {
+    validateCreateProductDto,
+    type ProductCategory,
+} from "@/constants/productDto";
 
 export default function AddProduct() {
     const router = useRouter();
@@ -59,20 +64,26 @@ export default function AddProduct() {
 
     // Add Product
     const handleSubmit = async () => {
-        if (!name.trim() || !price.trim() || !category || sizes.trim().length < 1) {
+        const dto = {
+            name: name.trim(),
+            description: description.trim(),
+            price: Number(price),
+            stock: Number(stock || "0"),
+            category: category as ProductCategory,
+            sizes: sizes.split(",").map((size) => size.trim()).filter(Boolean),
+            isFeatured,
+            images: images.map((asset, index) => ({
+                uri: asset.uri,
+                name: asset.fileName || asset.uri.split("/").pop() || `image${index}.jpg`,
+                type: asset.mimeType || "image/jpeg",
+            })),
+        };
+        const validationError = validateCreateProductDto(dto);
+        if (validationError) {
             Toast.show({
-                type: 'error',
-                text1: 'Missing Fields',
-                text2: 'Please fill in all required fields'
-            });
-            return;
-        }
-
-        if (images.length === 0) {
-            Toast.show({
-                type: 'error',
-                text1: 'Images Required',
-                text2: 'Please upload at least one product image'
+                type: "error",
+                text1: "Invalid product",
+                text2: validationError,
             });
             return;
         }
@@ -82,30 +93,38 @@ export default function AddProduct() {
             const token = await getToken();
             const formData = new FormData();
 
-            formData.append("name", name.trim());
-            formData.append("description", description.trim());
-            formData.append("price", price.trim());
-            formData.append("stock", stock.trim() || "0");
-            formData.append("category", category);
-            formData.append("sizes", sizes.trim());
-            formData.append("isFeatured", String(isFeatured));
+            formData.append("name", dto.name);
+            formData.append("description", dto.description);
+            formData.append("price", String(dto.price));
+            formData.append("stock", String(dto.stock));
+            formData.append("category", dto.category);
+            formData.append("sizes", JSON.stringify(dto.sizes));
+            formData.append("isFeatured", String(dto.isFeatured));
 
             for (let i = 0; i < images.length; i++) {
                 const asset = images[i];
                 const filename = asset.fileName || asset.uri.split("/").pop() || `image${i}.jpg`;
                 const type = asset.mimeType || 'image/jpeg';
 
-                formData.append("images", {
-                    uri: asset.uri,
-                    name: filename,
-                    type
-                } as any);
+                if (Platform.OS === "web") {
+                    // React Native's { uri, name, type } file shape is not
+                    // understood by browser FormData. Convert the picker
+                    // URI to a Blob so Multer receives an actual file.
+                    const response = await fetch(asset.uri);
+                    const blob = await response.blob();
+                    formData.append("images", blob, filename);
+                } else {
+                    formData.append("images", {
+                        uri: asset.uri,
+                        name: filename,
+                        type,
+                    } as any);
+                }
             }
 
             const { data } = await api.post("/products", formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    "Content-Type": "multipart/form-data",
                 },
             });
 
@@ -127,10 +146,13 @@ export default function AddProduct() {
             router.push("/admin/products");
         } catch (error) {
             console.error("Error adding product:", error);
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.message || error.message
+                : "Failed to add product";
             Toast.show({
                 type: 'error',
                 text1: 'Error',
-                text2: 'Failed to add product'
+                text2: message,
             });
         } finally {
             setSubmitting(false);

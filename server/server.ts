@@ -46,10 +46,20 @@ const corsOrigin: string | string[] | boolean =
 app.use(helmet());
 app.use(cors({ origin: corsOrigin }));
 
-// Rate limiter
+// Rate limiter. During local development, Expo/React refresh and the admin
+// screens can easily make more than 100 requests in a few minutes. Keep the
+// production limit strict, but make the development limit configurable so a
+// normal dev session cannot lock out product creation with HTTP 429.
+const isProduction = process.env.NODE_ENV === "production";
+const configuredRateLimit = Number(process.env.API_RATE_LIMIT_MAX);
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max:
+    Number.isFinite(configuredRateLimit) && configuredRateLimit > 0
+      ? configuredRateLimit
+      : isProduction
+        ? 100
+        : 2000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many requests, please try again later." },
