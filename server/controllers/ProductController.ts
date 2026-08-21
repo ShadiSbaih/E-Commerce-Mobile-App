@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { v2 as cloudinary } from "cloudinary";
+import cloudinary from "../config/cloudinary.js";
 import Product from "../models/Product.js";
 
 /** Escape a string so it is safe to embed inside a RegExp literal. */

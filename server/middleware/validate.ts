@@ -141,3 +141,26 @@ export const productsQuerySchema = z
     isFeatured: z.enum(["true", "false"]).optional(),
   })
   .strict();
+
+const productSizesSchema = z.preprocess((value) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value.split(",").map((size) => size.trim()).filter(Boolean);
+  }
+}, z.array(z.string().trim().min(1).max(20)).min(1).max(20));
+
+export const createProductSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  description: z.string().trim().min(1).max(5000),
+  price: z.coerce.number().finite().min(0),
+  stock: z.coerce.number().int().min(0),
+  category: z.enum(["Men", "Women", "Kids", "Shoes", "Bag", "Other"]),
+  sizes: productSizesSchema,
+  isFeatured: z
+    .enum(["true", "false"])
+    .optional()
+    .default("false"),
+});

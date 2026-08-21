@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View, ActivityIndicator, RefreshControl, Image, Alert } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View, ActivityIndicator, RefreshControl, Image, Alert, Modal, Pressable, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants";
 // import { dummyProducts } from "@/assets/assets";
@@ -10,14 +10,20 @@ import Toast from "react-native-toast-message";
 
 export default function AdminProducts() {
     const { getToken } = useAuth();
+    const getTokenRef = useRef(getToken);
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [products, setProducts] = useState([]);
+    const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+    useEffect(() => {
+        getTokenRef.current = getToken;
+    }, [getToken]);
 
     const fetchProducts = useCallback(async () => {
         try {
-            const token = await getToken();
+            const token = await getTokenRef.current();
             const { data } = await api.get("/products",
                 {
                     params: { limit: 100 },
@@ -39,7 +45,7 @@ export default function AdminProducts() {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [getToken]);
+    }, []);
 
     useEffect(() => {
         fetchProducts();
@@ -76,6 +82,11 @@ export default function AdminProducts() {
     };
 
     const deleteProduct = (id: string) => {
+        if (Platform.OS === "web") {
+            setDeleteTarget(id);
+            return;
+        }
+
         Alert.alert(
             "Delete Product",
             "Are you sure you want to delete this product?",
@@ -154,6 +165,43 @@ export default function AdminProducts() {
                     ))
                 )}
             </ScrollView>
+
+            <Modal
+                visible={deleteTarget !== null}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setDeleteTarget(null)}
+            >
+                <View className="items-center justify-center flex-1 px-6 bg-black/50">
+                    <View className="w-full max-w-md p-6 bg-white rounded-2xl">
+                        <Text className="mb-2 text-lg font-bold text-primary">
+                            Delete Product?
+                        </Text>
+                        <Text className="mb-6 text-secondary">
+                            This action cannot be undone.
+                        </Text>
+                        <View className="flex-row justify-end gap-3">
+                            <Pressable
+                                onPress={() => setDeleteTarget(null)}
+                                className="px-4 py-3 rounded-lg bg-surface"
+                            >
+                                <Text className="font-semibold text-primary">Cancel</Text>
+                            </Pressable>
+                            <Pressable
+                                onPress={async () => {
+                                    if (!deleteTarget) return;
+                                    const id = deleteTarget;
+                                    setDeleteTarget(null);
+                                    await performDelete(id);
+                                }}
+                                className="px-4 py-3 bg-red-500 rounded-lg"
+                            >
+                                <Text className="font-semibold text-white">Delete</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
